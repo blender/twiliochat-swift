@@ -4,8 +4,8 @@ class MessagingManager: NSObject {
     
     static let _sharedManager = MessagingManager()
     
-    var client:TwilioChatClient?
-    var delegate:ChannelManager?
+    var client: BetterChatClient?
+    var delegate: ChannelManager?
     var connected = false
     
     var userIdentity:String {
@@ -77,17 +77,17 @@ class MessagingManager: NSObject {
     
     // MARK: Twilio Client
     
-    func loadGeneralChatRoomWithCompletion(completion:@escaping (Bool, NSError?) -> Void) {
-        ChannelManager.sharedManager.joinGeneralChatRoomWithCompletion { succeeded in
-            if succeeded {
-                completion(succeeded, nil)
-            }
-            else {
-                let error = self.errorWithDescription(description: "Could not join General channel", code: 300)
-                completion(succeeded, error)
-            }
-        }
-    }
+//    func loadGeneralChatRoomWithCompletion(completion:@escaping (Bool, NSError?) -> Void) {
+//        ChannelManager.sharedManager.joinGeneralChatRoomWithCompletion { succeeded in
+//            if succeeded {
+//                completion(succeeded, nil)
+//            }
+//            else {
+//                let error = self.errorWithDescription(description: "Could not join General channel", code: 300)
+//                completion(succeeded, error)
+//            }
+//        }
+//    }
     
     func connectClientWithCompletion(completion: @escaping (Bool, NSError?) -> Void) {
         if (client != nil) {
@@ -96,23 +96,29 @@ class MessagingManager: NSObject {
         
         requestTokenWithCompletion { succeeded, token in
             if let token = token, succeeded {
+                
+                SessionManager.setToken(token: token)
                 self.initializeClientWithToken(token: token)
                 completion(succeeded, nil)
             }
             else {
-                let error = self.errorWithDescription(description: "Could not get access token", code:301)
-                completion(succeeded, error)
+                
+                self.initializeClientWithToken(token:nil)
+                completion(true, nil)
             }
         }
     }
     
-    func initializeClientWithToken(token: String) {
-        let accessManager = TwilioAccessManager(token:token, delegate:self)
+    func initializeClientWithToken(token: String?) {
+        
         UIApplication.shared.isNetworkActivityIndicatorVisible = true
-        TwilioChatClient.chatClient(withToken: token, properties: nil, delegate: self) { [weak self] result, chatClient in
-            guard (result?.isSuccessful() ?? false) else { return }
+        
+        BetterChatClient.chatClient(withToken: token, properties: nil, delegate: self, chatStore: UserDefaultChatStore.shared) { [weak self] result, chatClient in
+            
+            guard result == true else { return }
             
             UIApplication.shared.isNetworkActivityIndicatorVisible = true
+            
             self?.connected = true
             self?.client = chatClient
         }
@@ -135,31 +141,36 @@ class MessagingManager: NSObject {
 }
 
 // MARK: - TwilioChatClientDelegate
-extension MessagingManager : TwilioChatClientDelegate {
-    func chatClient(_ client: TwilioChatClient!, channelAdded channel: TCHChannel!) {
+extension MessagingManager : BetterChatClientDelegate {
+    
+    func chatClient(_ client: BetterChatClient, synchronizationStatusUpdated status: TCHClientSynchronizationStatus) {
+        
+        if status == TCHClientSynchronizationStatus.completed {
+            UIApplication.shared.isNetworkActivityIndicatorVisible = false
+            
+            ChannelManager.sharedManager.populateChannels()
+            
+//            loadGeneralChatRoomWithCompletion { success, error in
+//                if success {
+                    self.presentRootViewController()
+//                }
+//            }
+        }
+        
+        self.delegate?.chatClient(client, synchronizationStatusUpdated: status)
+    }
+    
+    func chatClient(_ client: BetterChatClient, channelAdded channel: TCHChannel) {
         self.delegate?.chatClient(client, channelAdded: channel)
     }
     
-    func chatClient(_ client: TwilioChatClient!, channelChanged channel: TCHChannel!) {
+    func chatClient(_ client: BetterChatClient, channelChanged channel: TCHChannel) {
+        
         self.delegate?.chatClient(client, channelChanged: channel)
     }
     
-    func chatClient(_ client: TwilioChatClient!, channelDeleted channel: TCHChannel!) {
+    func chatClient(_ client: BetterChatClient, channelDeleted channel: TCHChannel) {
         self.delegate?.chatClient(client, channelDeleted: channel)
-    }
-    
-    func chatClient(_ client: TwilioChatClient!, synchronizationStatusUpdated status: TCHClientSynchronizationStatus) {
-        if status == TCHClientSynchronizationStatus.completed {
-            UIApplication.shared.isNetworkActivityIndicatorVisible = false
-            ChannelManager.sharedManager.channelsList = client.channelsList()
-            ChannelManager.sharedManager.populateChannels()
-            loadGeneralChatRoomWithCompletion { success, error in
-                if success {
-                    self.presentRootViewController()
-                }
-            }
-        }
-        self.delegate?.chatClient(client, synchronizationStatusUpdated: status)
     }
 }
 

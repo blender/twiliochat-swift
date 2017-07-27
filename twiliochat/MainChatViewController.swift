@@ -8,19 +8,22 @@ class MainChatViewController: SLKTextViewController {
     static let TWCOpenGeneralChannelSegue = "OpenGeneralChat"
     static let TWCLabelTag = 200
     
-    var _channel:TCHChannel!
-    var channel:TCHChannel! {
+    var _channel:TCHStoredChannel?
+    
+    var channel:TCHStoredChannel? {
+        
         get {
             return _channel
         }
         set(channel) {
-            _channel = channel
-            title = _channel.friendlyName
-            _channel.delegate = self
             
-            if _channel == ChannelManager.sharedManager.generalChannel {
-                navigationItem.rightBarButtonItem = nil
-            }
+            _channel = channel
+            title = _channel?.friendlyName ?? "No Name"
+//            _channel.delegate = self
+//            
+//            if _channel == ChannelManager.sharedManager.generalChannel {
+//                navigationItem.rightBarButtonItem = nil
+//            }
             
             joinChannel()
         }
@@ -73,9 +76,9 @@ class MainChatViewController: SLKTextViewController {
         tableView!.rowHeight = UITableViewAutomaticDimension
         tableView!.separatorStyle = .none
         
-        if channel == nil {
-            channel = ChannelManager.sharedManager.generalChannel
-        }
+//        if channel == nil {
+//            channel = ChannelManager.sharedManager.generalChannel
+//        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -130,12 +133,12 @@ class MainChatViewController: SLKTextViewController {
     func joinChannel() {
         setViewOnHold(onHold: true)
         
-        if channel.status != .joined {
-            channel.join { result in
-                print("Channel Joined")
-            }
-            return
-        }
+//        if channel.status != .joined {
+//            channel.join { result in
+//                print("Channel Joined")
+//            }
+//            return
+//        }
         
         loadMessages()
         setViewOnHold(onHold: false)
@@ -156,8 +159,8 @@ class MainChatViewController: SLKTextViewController {
     // MARK: - Chat Service
     
     func sendMessage(inputMessage: String) {
-        let message = channel.messages.createMessage(withBody: inputMessage)
-        channel.messages.send(message, completion: nil)
+//        let message = channel.messages.createMessage(withBody: inputMessage)
+//        channel.messages.send(message, completion: nil)
     }
     
     func addMessages(newMessages:Set<TCHMessage>) {
@@ -177,11 +180,11 @@ class MainChatViewController: SLKTextViewController {
     
     func loadMessages() {
         messages.removeAll()
-        if channel.synchronizationStatus == .all {
-            channel.messages.getLastWithCount(100) { (result, items) in
-                self.addMessages(newMessages: Set(items!))
-            }
-        }
+//        if channel.synchronizationStatus == .all {
+//            channel.messages.getLastWithCount(100) { (result, items) in
+//                self.addMessages(newMessages: Set(items!))
+//            }
+//        }
     }
     
     func scrollToBottom() {
@@ -192,13 +195,13 @@ class MainChatViewController: SLKTextViewController {
     }
     
     func leaveChannel() {
-        channel.leave { result in
-            if (result?.isSuccessful())! {
-                let menuViewController = self.revealViewController().rearViewController as! MenuViewController
-                menuViewController.deselectSelectedChannel()
-                self.revealViewController().rearViewController.performSegue(withIdentifier: MainChatViewController.TWCOpenGeneralChannelSegue, sender: nil)
-            }
-        }
+//        channel.leave { result in
+//            if (result?.isSuccessful())! {
+//                let menuViewController = self.revealViewController().rearViewController as! MenuViewController
+//                menuViewController.deselectSelectedChannel()
+//                self.revealViewController().rearViewController.performSegue(withIdentifier: MainChatViewController.TWCOpenGeneralChannelSegue, sender: nil)
+//            }
+//        }
     }
     
     // MARK: - Actions
@@ -229,16 +232,15 @@ extension MainChatViewController : TCHChannelDelegate {
     
     func chatClient(_ client: TwilioChatClient!, channelDeleted channel: TCHChannel!) {
         DispatchQueue.main.async {
-            if channel == self.channel {
-                self.revealViewController().rearViewController
-                    .performSegue(withIdentifier: MainChatViewController.TWCOpenGeneralChannelSegue, sender: nil)
-            }
+//            if channel == self.channel {
+//                self.revealViewController().rearViewController
+//                    .performSegue(withIdentifier: MainChatViewController.TWCOpenGeneralChannelSegue, sender: nil)
+//            }
         }
     }
     
-    func chatClient(_ client: TwilioChatClient!,
-                    channel: TCHChannel!,
-                    synchronizationStatusUpdated status: TCHChannelSynchronizationStatus) {
+    func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, synchronizationStatusUpdated status: TCHChannelSynchronizationStatus) {
+        
         if status == .all {
             loadMessages()
             DispatchQueue.main.async {

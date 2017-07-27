@@ -39,12 +39,12 @@ class MenuViewController: UIViewController {
         
         let channel = ChannelManager.sharedManager.channels![indexPath.row]
         
-        var friendlyName = (channel as AnyObject).friendlyName
+        var friendlyName = (channel as? TCHStoredChannel)?.friendlyName
         
-        if let name = (channel as AnyObject).friendlyName, name.isEmpty {
+        if let name = (channel as? TCHStoredChannel)?.friendlyName, name.isEmpty {
             friendlyName = name
         }
-        menuCell.channelName = friendlyName!
+        menuCell.channelName = friendlyName ?? "NO Name :("
         return menuCell
     }
     
@@ -113,12 +113,12 @@ class MenuViewController: UIViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == MenuViewController.TWCOpenChannelSegue {
             let indexPath = sender as! NSIndexPath
-            let channelDescriptor = ChannelManager.sharedManager.channels![indexPath.row] as! TCHChannelDescriptor
+            let channel = ChannelManager.sharedManager.channels![indexPath.row] as! TCHStoredChannel
             let navigationController = segue.destination as! UINavigationController
             
-            channelDescriptor.channel { result, channel in
+//            channelDescriptor.channel { result, channel in
                 (navigationController.visibleViewController as! MainChatViewController).channel = channel
-            }
+//            }
         }
     }
     
@@ -184,17 +184,17 @@ extension MenuViewController : UITableViewDelegate {
     }
 }
 
-// MARK: - TwilioChatClientDelegate
-extension MenuViewController : TwilioChatClientDelegate {
-    func chatClient(_ client: TwilioChatClient!, channelAdded channel: TCHChannel!) {
+// MARK: - SharecareChatClientDelegate
+extension MenuViewController : BetterChatClientDelegate {
+    func chatClient(_ client: BetterChatClient, channelAdded channel: TCHChannel) {
         tableView.reloadData()
     }
     
-    func chatClient(_ client: TwilioChatClient!, channelChanged channel: TCHChannel!) {
+    func chatClient(_ client: BetterChatClient, channelChanged channel: TCHChannel) {
         tableView.reloadData()
     }
     
-    func chatClient(_ client: TwilioChatClient!, channelDeleted channel: TCHChannel!) {
+    func chatClient(_ client: BetterChatClient, channelDeleted channel: TCHChannel) {
         tableView.reloadData()
     }
 }
