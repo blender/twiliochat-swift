@@ -34,6 +34,17 @@
 		87F895F61C0E044300754007 /* MenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F895F51C0E044300754007 /* MenuViewController.swift */; };
 		87F895F81C0E045F00754007 /* MainChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F895F71C0E045F00754007 /* MainChatViewController.swift */; };
 		8A07B2CB1F224CAD009F0836 /* MockMessagingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A07B2CA1F224CAD009F0836 /* MockMessagingManager.swift */; };
+		C8CEF4171F3077FD00F59FA6 /* TwilioOfflineChatClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CEF4161F3077FC00F59FA6 /* TwilioOfflineChatClient.swift */; };
+		C8CEF41A1F30A90100F59FA6 /* TCHOfflineChannels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CEF4191F30A90100F59FA6 /* TCHOfflineChannels.swift */; };
+		C8CEF41C1F30AB1C00F59FA6 /* TCHOfflineUsers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CEF41B1F30AB1C00F59FA6 /* TCHOfflineUsers.swift */; };
+		C8CEF41E1F30C3FB00F59FA6 /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CEF41D1F30C3FB00F59FA6 /* Reachability.swift */; };
+		C8CEF4201F31B92700F59FA6 /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CEF41F1F31B92700F59FA6 /* ChatStore.swift */; };
+		C8CEF4241F31BD5400F59FA6 /* TCHChannel+Storable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CEF4231F31BD5400F59FA6 /* TCHChannel+Storable.swift */; };
+		C8CEF4261F31C02E00F59FA6 /* TCHMessage+Storable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CEF4251F31C02E00F59FA6 /* TCHMessage+Storable.swift */; };
+		C8CEF4281F31F8C000F59FA6 /* TCHOfflineMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CEF4271F31F8C000F59FA6 /* TCHOfflineMessage.swift */; };
+		C8CEF42A1F32261900F59FA6 /* TCHOfflineChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CEF4291F32261900F59FA6 /* TCHOfflineChannel.swift */; };
+		C8CEF42C1F322B2800F59FA6 /* TCHOfflineMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CEF42B1F322B2800F59FA6 /* TCHOfflineMessages.swift */; };
+		C8CEF42E1F33320900F59FA6 /* TCHOfflineResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CEF42D1F33320900F59FA6 /* TCHOfflineResult.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -85,6 +96,17 @@
 		8A07B2CA1F224CAD009F0836 /* MockMessagingManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockMessagingManager.swift; sourceTree = "<group>"; };
 		9CD950001C6E991D2EC43869 /* Pods-twiliochat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-twiliochat.debug.xcconfig"; path = "Pods/Target Support Files/Pods-twiliochat/Pods-twiliochat.debug.xcconfig"; sourceTree = "<group>"; };
 		A632A40A820E0010EABFCF87 /* Pods_twiliochatUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_twiliochatUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C8CEF4161F3077FC00F59FA6 /* TwilioOfflineChatClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TwilioOfflineChatClient.swift; sourceTree = "<group>"; };
+		C8CEF4191F30A90100F59FA6 /* TCHOfflineChannels.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TCHOfflineChannels.swift; sourceTree = "<group>"; };
+		C8CEF41B1F30AB1C00F59FA6 /* TCHOfflineUsers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TCHOfflineUsers.swift; sourceTree = "<group>"; };
+		C8CEF41D1F30C3FB00F59FA6 /* Reachability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
+		C8CEF41F1F31B92700F59FA6 /* ChatStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
+		C8CEF4231F31BD5400F59FA6 /* TCHChannel+Storable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "TCHChannel+Storable.swift"; sourceTree = "<group>"; };
+		C8CEF4251F31C02E00F59FA6 /* TCHMessage+Storable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "TCHMessage+Storable.swift"; sourceTree = "<group>"; };
+		C8CEF4271F31F8C000F59FA6 /* TCHOfflineMessage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TCHOfflineMessage.swift; sourceTree = "<group>"; };
+		C8CEF4291F32261900F59FA6 /* TCHOfflineChannel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TCHOfflineChannel.swift; sourceTree = "<group>"; };
+		C8CEF42B1F322B2800F59FA6 /* TCHOfflineMessages.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TCHOfflineMessages.swift; sourceTree = "<group>"; };
+		C8CEF42D1F33320900F59FA6 /* TCHOfflineResult.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TCHOfflineResult.swift; sourceTree = "<group>"; };
 		DB93390FBA31DBC1606B543F /* Pods-twiliochatUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-twiliochatUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-twiliochatUITests/Pods-twiliochatUITests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -135,6 +157,7 @@
 				8771091C1C1638E9004C57D3 /* InputDialogController.swift */,
 				877109221C1776FA004C57D3 /* DateTodayFormatter.swift */,
 				59F5EDAF1C6E925500CE7D32 /* TokenRequestHandler.swift */,
+				C8CEF41D1F30C3FB00F59FA6 /* Reachability.swift */,
 			);
 			name = util;
 			sourceTree = "<group>";
@@ -170,6 +193,7 @@
 		59F208FC1C04C06800CC2392 /* twiliochat */ = {
 			isa = PBXGroup;
 			children = (
+				C8CEF4181F30A8C600F59FA6 /* offline */,
 				59F5EDB11C720DD700CE7D32 /* session */,
 				877109101C10EEF0004C57D3 /* channels */,
 				59AE1CCF1C0C8C6D0008B10B /* util */,
@@ -265,6 +289,23 @@
 			name = menu;
 			sourceTree = "<group>";
 		};
+		C8CEF4181F30A8C600F59FA6 /* offline */ = {
+			isa = PBXGroup;
+			children = (
+				C8CEF41F1F31B92700F59FA6 /* ChatStore.swift */,
+				C8CEF4231F31BD5400F59FA6 /* TCHChannel+Storable.swift */,
+				C8CEF4251F31C02E00F59FA6 /* TCHMessage+Storable.swift */,
+				C8CEF4191F30A90100F59FA6 /* TCHOfflineChannels.swift */,
+				C8CEF4271F31F8C000F59FA6 /* TCHOfflineMessage.swift */,
+				C8CEF41B1F30AB1C00F59FA6 /* TCHOfflineUsers.swift */,
+				C8CEF4161F3077FC00F59FA6 /* TwilioOfflineChatClient.swift */,
+				C8CEF4291F32261900F59FA6 /* TCHOfflineChannel.swift */,
+				C8CEF42B1F322B2800F59FA6 /* TCHOfflineMessages.swift */,
+				C8CEF42D1F33320900F59FA6 /* TCHOfflineResult.swift */,
+			);
+			name = offline;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -321,7 +362,9 @@
 				TargetAttributes = {
 					59F208F91C04C06800CC2392 = {
 						CreatedOnToolsVersion = 7.1.1;
+						DevelopmentTeam = CN89264FDM;
 						LastSwiftMigration = 0810;
+						ProvisioningStyle = Automatic;
 					};
 					59F2090D1C04C06800CC2392 = {
 						CreatedOnToolsVersion = 7.1.1;
@@ -472,19 +515,30 @@
 			files = (
 				877109151C10EF4F004C57D3 /* ChannelManager.swift in Sources */,
 				87F895F81C0E045F00754007 /* MainChatViewController.swift in Sources */,
+				C8CEF41E1F30C3FB00F59FA6 /* Reachability.swift in Sources */,
+				C8CEF4261F31C02E00F59FA6 /* TCHMessage+Storable.swift in Sources */,
+				C8CEF42C1F322B2800F59FA6 /* TCHOfflineMessages.swift in Sources */,
+				C8CEF4201F31B92700F59FA6 /* ChatStore.swift in Sources */,
+				C8CEF4171F3077FD00F59FA6 /* TwilioOfflineChatClient.swift in Sources */,
 				877109171C15E55E004C57D3 /* MenuTableCell.swift in Sources */,
 				877109231C1776FA004C57D3 /* DateTodayFormatter.swift in Sources */,
 				877109211C1772C5004C57D3 /* StatusMessage.swift in Sources */,
 				8771091D1C1638E9004C57D3 /* InputDialogController.swift in Sources */,
+				C8CEF4241F31BD5400F59FA6 /* TCHChannel+Storable.swift in Sources */,
 				59F209321C050EF700CC2392 /* LoginViewController.swift in Sources */,
 				8771091F1C175AC2004C57D3 /* ChatTableCell.swift in Sources */,
+				C8CEF42E1F33320900F59FA6 /* TCHOfflineResult.swift in Sources */,
+				C8CEF42A1F32261900F59FA6 /* TCHOfflineChannel.swift in Sources */,
 				87F895F21C0CF3CE00754007 /* AlertDialogController.swift in Sources */,
 				59AE1CCE1C0C8C280008B10B /* TextFieldFormHandler.swift in Sources */,
+				C8CEF41A1F30A90100F59FA6 /* TCHOfflineChannels.swift in Sources */,
 				59F208FE1C04C06800CC2392 /* AppDelegate.swift in Sources */,
 				59AE1CD21C0D03820008B10B /* MessagingManager.swift in Sources */,
+				C8CEF41C1F30AB1C00F59FA6 /* TCHOfflineUsers.swift in Sources */,
 				59F5EDB01C6E925500CE7D32 /* TokenRequestHandler.swift in Sources */,
 				59F5EDB31C720E1200CE7D32 /* SessionManager.swift in Sources */,
 				87F895F61C0E044300754007 /* MenuViewController.swift in Sources */,
+				C8CEF4281F31F8C000F59FA6 /* TCHOfflineMessage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -625,6 +679,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = CN89264FDM;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				HEADER_SEARCH_PATHS = (
@@ -635,8 +691,9 @@
 				INFOPLIST_FILE = twiliochat/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = twilio.twiliochat;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sharecare.feingoldtech.twiliochat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "twiliochat/twiliochat-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 			};
@@ -648,6 +705,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = CN89264FDM;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				HEADER_SEARCH_PATHS = (
@@ -658,8 +717,9 @@
 				INFOPLIST_FILE = twiliochat/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = twilio.twiliochat;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sharecare.feingoldtech.twiliochat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "twiliochat/twiliochat-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 			};

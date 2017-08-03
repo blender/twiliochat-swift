@@ -24,7 +24,7 @@ class MenuViewController: UIViewController {
         refreshControl.tintColor = UIColor.white
         
         self.refreshControl.frame.origin.x -= MenuViewController.TWCRefreshControlXOffset
-        ChannelManager.sharedManager.delegate = self
+        ChannelManager.sharedManager.delegate = self // piggy back on the ChannelManager
         reloadChannelList()
     }
     
@@ -153,9 +153,9 @@ extension MenuViewController : UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        if let channel = ChannelManager.sharedManager.channels?.object(at: indexPath.row) as? TCHChannel {
-            return channel != ChannelManager.sharedManager.generalChannel
-        }
+//        if let channel = ChannelManager.sharedManager.channels?.object(at: indexPath.row) as? TCHChannel {
+//            return channel != ChannelManager.sharedManager.generalChannel
+//        }
         return false
     }
     

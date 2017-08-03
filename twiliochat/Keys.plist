@@ -3,6 +3,6 @@
 <plist version="1.0">
 <dict>
 	<key>TokenRequestUrl</key>
-	<string>http://localhost:8000/token</string>
+	<string>http://fg-twilio-node.herokuapp.com/token</string>
 </dict>
 </plist>

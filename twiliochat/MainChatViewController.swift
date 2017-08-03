@@ -18,9 +18,9 @@ class MainChatViewController: SLKTextViewController {
             title = _channel.friendlyName
             _channel.delegate = self
             
-            if _channel == ChannelManager.sharedManager.generalChannel {
-                navigationItem.rightBarButtonItem = nil
-            }
+//            if _channel == ChannelManager.sharedManager.generalChannel {
+//                navigationItem.rightBarButtonItem = nil
+//            }
             
             joinChannel()
         }
@@ -73,9 +73,9 @@ class MainChatViewController: SLKTextViewController {
         tableView!.rowHeight = UITableViewAutomaticDimension
         tableView!.separatorStyle = .none
         
-        if channel == nil {
-            channel = ChannelManager.sharedManager.generalChannel
-        }
+//        if channel == nil {
+//            channel = ChannelManager.sharedManager.generalChannel
+//        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -176,6 +176,7 @@ class MainChatViewController: SLKTextViewController {
     }
     
     func loadMessages() {
+        
         messages.removeAll()
         if channel.synchronizationStatus == .all {
             channel.messages.getLastWithCount(100) { (result, items) in
@@ -213,6 +214,7 @@ class MainChatViewController: SLKTextViewController {
 }
 
 extension MainChatViewController : TCHChannelDelegate {
+    // TODO is this called even for channels that the user is not subscribed to?
     func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, messageAdded message: TCHMessage!) {
         if !messages.contains(message) {
             addMessages(newMessages: [message])
@@ -227,6 +229,7 @@ extension MainChatViewController : TCHChannelDelegate {
         addMessages(newMessages: [StatusMessage(member:member, status:.Left)])
     }
     
+    // TODO a channel can not be added via the TCHChannelDelegate but it is notified on deletion
     func chatClient(_ client: TwilioChatClient!, channelDeleted channel: TCHChannel!) {
         DispatchQueue.main.async {
             if channel == self.channel {
