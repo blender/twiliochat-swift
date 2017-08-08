@@ -55,7 +55,8 @@ class UserDefaultChatStore: ChatStore {
             }
             
             UserDefaultChatStore.defaults.setValue(channelMap, forKey: UserDefaultChatStore.channelsStoreKey)
-            UserDefaultChatStore.defaults.synchronize()
+            let synchronized = UserDefaultChatStore.defaults.synchronize()
+            print("\(String(describing: type(of: self))).\(#function) - synchronized: \(synchronized)")
         }
     }
     
@@ -85,6 +86,8 @@ class UserDefaultChatStore: ChatStore {
 
     func storeMessages(forChannel channel: TCHChannel, messages: [TCHMessage]) {
      
+        print("\(String(describing: type(of: self))).\(#function) - channel: \(channel.friendlyName!) sid: \(channel.sid!)")
+        
         let storableMessages = messages.map { (message) -> TCHStoredMessage in
             return message.storable(forChannel: channel)
         }
@@ -93,19 +96,25 @@ class UserDefaultChatStore: ChatStore {
             
             let s = Set(existingStoredMessages + storableMessages)
             
-            var messageMap: [String: Data] = [:]
+            var messageMap = UserDefaultChatStore.defaults.value(forKey: UserDefaultChatStore.messagesStoreKey) as? [String: Data] ?? [:]
             
             s.forEach { message in
                 
+                //print("\(String(describing: type(of: self))).\(#function) - key: \(message.hashValue) sid: \(message.sid!), channel: \(message.channel!)")
                 messageMap[String(describing: message.hashValue)] = message.toJSON()
             }
             
+            //print("\(String(describing: type(of: self))).\(#function) - count: \(messageMap.count) keys: \(Array(messageMap.keys))")
+            
             UserDefaultChatStore.defaults.setValue(messageMap, forKey: UserDefaultChatStore.messagesStoreKey)
-            UserDefaultChatStore.defaults.synchronize()
+            let synchronized = UserDefaultChatStore.defaults.synchronize()
+            print("\(String(describing: type(of: self))).\(#function) - synchronized: \(synchronized)")
         }
     }
     
     func storedMessages(forChannel channel: TCHChannel, completion: ([TCHStoredMessage]) -> ()) {
+        
+        print("\(String(describing: type(of: self))).\(#function) - channel: \(channel.friendlyName!) sid: \(channel.sid!)")
         
         guard let messageMap = UserDefaultChatStore.defaults.value(forKey: UserDefaultChatStore.messagesStoreKey) as? [String: Data] else {
             
@@ -113,9 +122,17 @@ class UserDefaultChatStore: ChatStore {
             return
         }
         
-        // would need to hash for all possible values of mesaage.sid
+//        print("\(String(describing: type(of: self))).\(#function) - count: \(messageMap.count) keys: \(Array(messageMap.keys))")
+//        
+//        messageMap.forEach { item in
+//            
+//            let storedMessage = TCHStoredMessage.fromJSON(data: item.value)
+//            if storedMessage?.channel == channel.sid {
+//                print("\(String(describing: type(of: self))).\(#function) - key: \(item.key) sid: \(storedMessage!.sid!), channel: \(storedMessage!.channel!)")
+//            }
+//        }
         
-        let messages: [TCHStoredMessage] = messageMap.values.map{ TCHStoredMessage.fromJSON(data: $0)}.flatMap{$0}.filter { (message) -> Bool in
+        let messages: [TCHStoredMessage] = messageMap.values.map { TCHStoredMessage.fromJSON(data: $0)}.flatMap{$0}.filter { (message) -> Bool in
             return message.channel == channel.sid
         }
         

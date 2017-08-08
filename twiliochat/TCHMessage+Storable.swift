@@ -55,6 +55,7 @@ struct TCHStoredMessage {
         
         self.sid = sid
         self.index = index
+        self.author = author
         self.body = body
         self.timestamp = timestamp
         self.dateUpdated = dateUpdated
@@ -126,6 +127,6 @@ extension TCHStoredMessage: Hashable {
     
     public var hashValue: Int {
         
-        return self.sid.hash ^ self.channel.hash
+        return [self.sid, self.channel].joined(separator: ".").hash
     }
 }

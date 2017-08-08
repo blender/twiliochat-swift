@@ -10,7 +10,7 @@ class ChannelManager: NSObject {
     
     var channelsList:TCHChannels?
     var channels:NSMutableOrderedSet?
-    //var generalChannel:TCHChannel!
+    var currentChannel:TCHChannel?
     var connected = false
     
     override init() {
@@ -29,12 +29,15 @@ class ChannelManager: NSObject {
         
         guard firstChannel.status != .joined else {
             
+            self.currentChannel = firstChannel
             return completion(true)
         }
         
         firstChannel.join { result in
             
-            completion(result?.isSuccessful() ?? false)
+            let success = result?.isSuccessful() ?? false
+            self.currentChannel = success ? firstChannel : nil
+            completion(success)
         }
     }
     
@@ -109,31 +112,73 @@ class ChannelManager: NSObject {
         
         if self.connected {
         
+            let loadGroup = DispatchGroup()
+            
+            loadGroup.enter()
             channelsList?.userChannelDescriptors { result, paginator in
-                self.channels?.addObjects(from: paginator!.items())
-                self.sortChannels()
+                
+                paginator!.items().forEach { (channelDescriptor) in
+                    
+                    channelDescriptor.channel { result, channel in
+                    
+                        guard (result?.isSuccessful() ?? false) else { return }
+                        
+                        self.channels?.add(channel!)
+                    }
+                }
+                
+                loadGroup.leave()
             }
             
+            loadGroup.enter()
             channelsList?.publicChannelDescriptors { result, paginator in
-                self.channels?.addObjects(from: paginator!.items())
-                self.sortChannels()
+
+                paginator!.items().forEach { (channelDescriptor) in
+                    
+                    channelDescriptor.channel { result, channel in
+                        
+                        guard (result?.isSuccessful() ?? false) else { return }
+                        
+                        self.channels?.add(channel!)
+                    }
+                }
+
+                loadGroup.leave()
             }
+            
+            loadGroup.notify(queue: DispatchQueue.main) {
+                
+                self.sortChannels()
+
+                if self.delegate != nil {
+                    self.delegate!.reloadChannelList()
+                }
+            }
+
         } else {
+            
+            // Nota bene: Robert Norris - using subscribed channels is a short cut to avoid
+            // offline paginator implementation. This may be reviewed.
             
             channelsList?.subscribedChannels().forEach { (channel) in
                 self.channels?.add(channel)
                 self.sortChannels()
             }
-        }
-        
-        if self.delegate != nil {
-            self.delegate!.reloadChannelList()
+            
+            if self.delegate != nil {
+                self.delegate!.reloadChannelList()
+            }
         }
     }
     
     func sortChannels() {
-        let sortSelector = #selector(NSString.localizedCaseInsensitiveCompare(_:))
-        let descriptor = NSSortDescriptor(key: "friendlyName", ascending: true, selector: sortSelector)
+        let descriptor = NSSortDescriptor(key: "friendlyName", ascending: true) { id1, id2 in
+            
+            let first = (id1 as? String)?.lowercased() ?? ""
+            let second = (id2 as? String)?.lowercased() ?? ""
+            
+            return first.compare(second)
+        }
         channels!.sort(using: [descriptor])
     }
     

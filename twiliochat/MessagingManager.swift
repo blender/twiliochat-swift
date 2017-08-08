@@ -26,6 +26,8 @@ class MessagingManager: NSObject {
         return SessionManager.isLoggedIn()
     }
     
+    var rootViewControllerName: String?
+    
     override init() {
         super.init()
         delegate = ChannelManager.sharedManager
@@ -36,6 +38,8 @@ class MessagingManager: NSObject {
         NotificationCenter.default.addObserver(self, selector: #selector(reachabilityChanged(_:))
             , name: ReachabilityChangedNotification
             , object: reachability)
+        
+        _ = try? reachability.startNotifier()
     }
     
     @objc func reachabilityChanged(_ note: Notification) {
@@ -95,40 +99,60 @@ class MessagingManager: NSObject {
     
     func presentRootViewController() {
         
-        if (!hasIdentity) {
+        if (!self.hasIdentity) {
             presentViewControllerByName(viewController: "LoginViewController")
             return
         }
-        
-        if (!connected) {
-            connectClientWithCompletion { success, error in
-                
-                guard success else {
-                    print("\(error?.localizedDescription ?? "Unknow error!")")
-                    return
-                }
-                
-                print("Delegate method will load views when sync is complete")
-            }
-            return
-        }
-        
-        print("\(String(describing: type(of: self))).\(#function) - \(Date())")
 
-        presentViewControllerByName(viewController: "RevealViewController")
+        connectClientWithCompletion { success, error in
+            
+            guard success else {
+                print("\(error?.localizedDescription ?? "Unknow error!")")
+                return
+            }
+            
+            print("Delegate method will load views when sync is complete")
+        }
+
+        print("\(String(describing: type(of: self))).\(#function) - \(Date())")
     }
     
     func presentViewControllerByName(viewController: String) {
+        
+        let name = "Main.\(viewController)"
+        
+        guard name != self.rootViewControllerName else {
+            
+            return
+        }
+        
+        self.rootViewControllerName = name
         presentViewController(controller: storyBoardWithName(name: "Main").instantiateViewController(withIdentifier: viewController))
     }
     
     func presentLaunchScreen() {
+        let name = "LaunchScreen.Initial"
+
+        guard name != self.rootViewControllerName else {
+            
+            return
+        }
+
+        self.rootViewControllerName = name
         presentViewController(controller: storyBoardWithName(name: "LaunchScreen").instantiateInitialViewController()!)
     }
     
-    func presentViewController(controller: UIViewController) {
+    private func presentViewController(controller: UIViewController) {
         let window = UIApplication.shared.delegate!.window!!
+
         window.rootViewController = controller
+    }
+    
+    fileprivate var mainChatViewController: MainChatViewController? {
+    
+        let window = UIApplication.shared.delegate!.window!!
+    
+        return window.rootViewController?.childViewControllers.last?.childViewControllers.first as? MainChatViewController
     }
     
     func storyBoardWithName(name:String) -> UIStoryboard {
@@ -186,27 +210,10 @@ class MessagingManager: NSObject {
         
         print("\(String(describing: type(of: self))).\(#function) - \(Date())")
 
-        self.reachability.stopNotifier()
-        
-        if offlineClient.isConnected {
-            
-            self.logout()
-        }
-
-        // if offline we can not obtain the token so can not continue
-        // timeout can be very long so we want to preempt the call by checking availability
-        // need initializeClientWithChatStore(...) to show offline content
-        // this means the TwilioChatClient is not initialised or available so none of the delegate methods are called
-        // We want a TwilioOfflineChatClient that has the same API but which deals with the offline store
-        // It can then addMessages etc. using the usual interfaces
-        // to cycle between online/offline, we need to switch the self.client and refresh the UI
-        // when online, messages are added to the TwilioChatClient and in the UI via the various delegates
-        // going offline we must synchronize with the TwilioOfflineChatClient i.e. channels and messages etc.
-        // when the application is going to shutdown, this should be persisted
-
         guard self.reachability.isReachable else {
             
             completion(true, nil)
+            self.chatClient(self.offlineClient, synchronizationStatusUpdated: self.offlineClient.synchronizationStatus)
             return
         }
         
@@ -221,8 +228,6 @@ class MessagingManager: NSObject {
                 self.chatClient(self.offlineClient, synchronizationStatusUpdated: self.offlineClient.synchronizationStatus)
             }
         }
-        
-        _ = try? reachability.startNotifier()
     }
     
     func initializeClientWithToken(token: String) {
@@ -280,26 +285,34 @@ extension MessagingManager : TwilioChatClientDelegate {
         
         if status == TCHClientSynchronizationStatus.completed {
 
-            let presentBlock: (Bool, NSError?) -> () = { [weak self] (success, error) in
-                
-                guard success else {
-                    return print("\(error?.localizedDescription ?? "Unknow error!")")
-                }
-                
-                self?.presentRootViewController()
-            }
-
-            if client == self.client {
+            let isOnlineClient = (client == self.client)
+            
+            if isOnlineClient {
             
                 self.offlineClient.connect(toClient: client)
             }
             
             UIApplication.shared.isNetworkActivityIndicatorVisible = false
             ChannelManager.sharedManager.channelsList = client.channelsList()
-            ChannelManager.sharedManager.connected = client.connectionState == .connected
+            
+            // TODO behaviour is currently based on which client comes last - which is usually the onlineClient
+            ChannelManager.sharedManager.connected = isOnlineClient
             ChannelManager.sharedManager.populateChannels()
             
-            loadFirstChannelWithCompletion(completion: presentBlock)
+            loadFirstChannelWithCompletion { (success, error) in
+
+                guard success else {
+                    return print("\(error?.localizedDescription ?? "Unknow error!")")
+                }
+
+                guard let mainChatViewController = self.mainChatViewController else {
+                    
+                    self.presentViewControllerByName(viewController: "RevealViewController")
+                    return
+                }
+
+                mainChatViewController.channel = ChannelManager.sharedManager.currentChannel
+            }
         }
         self.delegate?.chatClient(client, synchronizationStatusUpdated: status)
     }

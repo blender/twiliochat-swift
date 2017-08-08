@@ -14,30 +14,32 @@ import TwilioChatClient
 class TCHOfflineChannels: TCHChannels {
 
     private var connected: Bool = false
-    private var offlineChannels: [TCHOfflineChannel] = []
+    private(set) var offlineChannels: [TCHOfflineChannel]!
     
-    func load(fromStore store: ChatStore, completion: (() -> ())? = nil) {
+    init(_ offlineChannels: [TCHOfflineChannel] = []) {
+        
+        self.offlineChannels = offlineChannels
+    }
+    
+    func load(offlineChatClient client: TwilioOfflineChatClient, completion: (() -> ())? = nil) {
      
         let loadGroup = DispatchGroup()
         
         loadGroup.enter()
-        store.storedChannels { storedChannels in
+        client.store.storedChannels { storedChannels in
 
-            let offlineChannels = storedChannels.map { (storedChannel) -> TCHOfflineChannel in
+            self.offlineChannels = storedChannels.map { (storedChannel) -> TCHOfflineChannel in
+                
+                let offlineChannel = TCHOfflineChannel(storedChannel)
                 
                 loadGroup.enter()
-                return TCHOfflineChannel(storedChannel)
-            }
-            
-            offlineChannels.forEach { (offlineChannel) in
-
-                offlineChannel.load(fromStore: store) {
-                    
+                client.store.storedMessages(forChannel: offlineChannel) { storedMessages in
+                
+                    offlineChannel.offlineMessages = TCHOfflineMessages(storedMessages)
                     loadGroup.leave()
                 }
+                return offlineChannel
             }
-            
-            self.offlineChannels = offlineChannels
             
             loadGroup.leave()
         }
@@ -48,78 +50,77 @@ class TCHOfflineChannels: TCHChannels {
         }
     }
     
-    func connect(toChannels channels: TCHChannels) {
-        
-        let offlineChannels = channels.subscribedChannels().map { (channel) -> TCHOfflineChannel in
-            
-            let offlineChannel = TCHOfflineChannel(channel.storable)
-            offlineChannel.connect(toChannel: channel)
-            return offlineChannel
-        }
-        
-        self.offlineChannels = offlineChannels
-        self.connected = true
-    }
-    
-    func disconnect(updatingStore store: ChatStore? = nil) {
+    func save(toStore store: ChatStore) {
 
-        store?.storeChannels(self.offlineChannels)
+        store.storeChannels(self.offlineChannels)
         
         self.offlineChannels.forEach { (channel) in
             
-            channel.disconnect(updatingStore: store)
+            channel.save(toStore: store)
         }
-        
-        self.connected = false
     }
+    
+    func updateSynchronizationStatus(forClient client: TwilioChatClient) {
+        
+        self.offlineChannels.forEach { (offlineChannel) in
+            
+            offlineChannel.delegate?.chatClient?(client, channel: offlineChannel, synchronizationStatusUpdated: offlineChannel.synchronizationStatus)
+        }
+    }
+    
+//    func connect(toChannels channels: TCHChannels) {
+//        
+//        let offlineChannels = channels.subscribedChannels().map { (channel) -> TCHOfflineChannel in
+//            
+//            let offlineChannel = TCHOfflineChannel(channel.storable)
+//            offlineChannel.connect(toChannel: channel)
+//            return offlineChannel
+//        }
+//        
+//        self.offlineChannels = offlineChannels
+//        self.connected = true
+//    }
+    
+//    func disconnect() {
+//
+//        self.offlineChannels.forEach { (offlineChannel) in
+//            
+//            offlineChannel.disconnect()
+//        }
+//        
+//        self.offlineChannels = []
+//        self.connected = false
+//    }
     
     override func subscribedChannels() -> [TCHChannel]! {
-        
-        guard self.connected else {
-        
-            return self.offlineChannels
-        }
-        
-        return super.subscribedChannels()
+
+        return self.offlineChannels
     }
     
+    // Providing this offline would require a offline paginator, one that maybe only ever provides
+    // a single page with all results from the offline store. Filter for TCHChannelType.type is .private
     override func userChannelDescriptors(completion: TCHChannelDescriptorPaginatorCompletion!) {
         
-        guard self.connected else {
-        
-            return completion(nil, nil)
-        }
-        
-        super.userChannelDescriptors(completion: completion)
+        return completion(nil, nil)
     }
-    
+
+    // Providing this offline would require a offline paginator, one that maybe only ever provides
+    // a single page with all results from the offline store. Filter for TCHChannelType.type is .public
     override func publicChannelDescriptors(completion: TCHChannelDescriptorPaginatorCompletion!) {
         
-        guard self.connected else {
-        
-            return completion(nil, nil)
-        }
-        
-        super.publicChannelDescriptors(completion: completion)
+        return completion(nil, nil)
     }
     
     override func createChannel(options: [AnyHashable : Any]! = [:], completion: TCHChannelCompletion!) {
         
-        guard self.connected else {
-            
-            return completion(nil, nil)
-        }
-        
-        super.createChannel(options: options, completion: completion)
+        return completion(nil, nil)
     }
     
+    // After this call, the channel will be a subscribed channel.
+    // Rather than mimic the online client, it may be more useful to subscribe after load. This would be a change in
+    // behaviour however.
     override func channel(withSidOrUniqueName sidOrUniqueName: String!, completion: TCHChannelCompletion!) {
         
-        guard self.connected else {
-            
-            return completion(nil, nil)
-        }
-        
-        super.channel(withSidOrUniqueName: sidOrUniqueName, completion: completion)
+        return completion(nil, nil)
     }
 }

@@ -18,10 +18,6 @@ class TwilioOfflineChatClient: TwilioChatClient {
         
         return TCHOfflineChannels()
     }()
-    private lazy var offlineUsers: TCHOfflineUsers = {
-        
-        return TCHOfflineUsers()
-    }()
     
     init(delegate: TwilioChatClientDelegate!) {
         
@@ -29,42 +25,112 @@ class TwilioOfflineChatClient: TwilioChatClient {
         
         super.delegate = delegate
         
-        self.load(fromStore: self.store) {
-            
+        self.load() {
+        
             self.delegate?.chatClient?(self, synchronizationStatusUpdated: self.synchronizationStatus)
         }
     }
     
-    func load(fromStore store: ChatStore, completion: (() -> ())? = nil) {
+    func load(completion: (() -> ())? = nil) {
         
-        let loadGroup = DispatchGroup()
-        
-        loadGroup.enter()
-        self.offlineUsers.load(fromStore: store) {
+        self.offlineChannels.load(offlineChatClient: self) {
             
-            loadGroup.leave()
-        }
-        
-        loadGroup.enter()
-        self.offlineChannels.load(fromStore: store) {
-            
-            loadGroup.leave()
-        }
-        
-        loadGroup.notify(queue: DispatchQueue.main) {
-         
             completion?()
+        }
+    }
+    
+    func save() {
+        
+        self.offlineChannels.save(toStore: self.store)
+    }
+    
+    typealias OfflineChannelsHandler = (([TCHOfflineChannel]) -> ())
+    
+    func collectOfflineChannelsFromPaginator(_ paginator: TCHChannelDescriptorPaginator
+        , accumulator: [TCHOfflineChannel]
+        , onLastPage: @escaping OfflineChannelsHandler) {
+        
+        let group = DispatchGroup()
+        
+        var offlineChannels: [TCHOfflineChannel] = []
+        paginator.items().forEach { (channelDescriptor) in
+            
+            group.enter() // .channel
+            channelDescriptor.channel { result, channel in
+                
+                guard result?.isSuccessful() ?? false else { return }
+                
+                let storedChannel = channel!.storable
+            
+                group.enter() // .getLastWithCount
+                channel!.messages.getLastWithCount(100) { result, messages in
+                    
+                    let storedMessages: [TCHStoredMessage] = messages!.map { (message) in
+                     
+                        return message.storable(forChannel: channel!)
+                    }
+                
+                    let offlineChannel = TCHOfflineChannel(storedChannel, storedMessages: storedMessages)
+                    offlineChannels.append(offlineChannel)
+                    
+                    group.leave() // .getLastWithCount
+                }
+                
+                group.leave() // .channel
+            }
+        }
+        
+        group.notify(queue: DispatchQueue.main) {
+            
+            let newAcc = accumulator + offlineChannels
+
+            if paginator.hasNextPage() {
+                
+                paginator.requestNextPage { [weak self] result, paginator in
+                    
+                    guard result?.isSuccessful() ?? false else {
+                        
+                        onLastPage(newAcc)
+                        return
+                    }
+                    
+                    self?.collectOfflineChannelsFromPaginator(paginator!, accumulator: newAcc, onLastPage: onLastPage)
+                }
+            }
+            else {
+                
+                onLastPage(newAcc)
+            }
         }
     }
     
     func connect(toClient client: TwilioChatClient) {
         
         self.client = client
-
-        self.offlineUsers.connect(toUsers: client.users())
-        self.offlineChannels.connect(toChannels: client.channelsList())
         
-        self.delegate?.chatClient?(self, synchronizationStatusUpdated: self.synchronizationStatus)
+        client.channelsList().userChannelDescriptors { [weak self] result, paginator in
+            
+            guard result?.isSuccessful() ?? false else {
+                
+                return
+            }
+            
+            self?.collectOfflineChannelsFromPaginator(paginator!, accumulator: []) { [weak self] offlineChannels in
+
+                guard let selfie = self else { return }
+                
+                selfie.offlineChannels = TCHOfflineChannels(offlineChannels)
+                
+                selfie.save()
+
+                selfie.offlineChannels.offlineChannels.forEach { (offlineChannel) in
+                    
+                    offlineChannel.delegate?.chatClient?(selfie, channel: offlineChannel, synchronizationStatusUpdated: offlineChannel.synchronizationStatus)
+                }
+                
+                selfie.delegate?.chatClient?(selfie, synchronizationStatusUpdated: selfie.synchronizationStatus)
+            }
+        }
     }
     
     func disconnect() {
@@ -74,8 +140,7 @@ class TwilioOfflineChatClient: TwilioChatClient {
             return
         }
         
-        self.offlineUsers.disconnect(updatingStore: self.store)
-        self.offlineChannels.disconnect(updatingStore: self.store)
+        self.save()
         
         client.shutdown()
         self.client = nil
@@ -83,7 +148,7 @@ class TwilioOfflineChatClient: TwilioChatClient {
         self.delegate?.chatClient?(self, synchronizationStatusUpdated: self.synchronizationStatus)
     }
 
-    var isConnected: Bool {
+    var isConnectedToClient: Bool {
         
         return self.client != nil
     }
@@ -132,7 +197,7 @@ class TwilioOfflineChatClient: TwilioChatClient {
     
         guard let client = self.client else {
             
-            return self.offlineUsers
+            return nil
         }
         
         return client.users()
@@ -186,6 +251,6 @@ class TwilioOfflineChatClient: TwilioChatClient {
         }
         
         client.shutdown()
-        self.client = nil
+        self.disconnect()
     }
 }

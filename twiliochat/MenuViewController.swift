@@ -44,7 +44,7 @@ class MenuViewController: UIViewController {
         if let name = (channel as AnyObject).friendlyName, name.isEmpty {
             friendlyName = name
         }
-        menuCell.channelName = friendlyName!
+        menuCell.channelName = friendlyName ?? ""
         return menuCell
     }
     
@@ -113,12 +113,10 @@ class MenuViewController: UIViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == MenuViewController.TWCOpenChannelSegue {
             let indexPath = sender as! NSIndexPath
-            let channelDescriptor = ChannelManager.sharedManager.channels![indexPath.row] as! TCHChannelDescriptor
+            let channel = ChannelManager.sharedManager.channels![indexPath.row] as! TCHChannel
             let navigationController = segue.destination as! UINavigationController
             
-            channelDescriptor.channel { result, channel in
-                (navigationController.visibleViewController as! MainChatViewController).channel = channel
-            }
+            (navigationController.visibleViewController as! MainChatViewController).channel = channel
         }
     }
     

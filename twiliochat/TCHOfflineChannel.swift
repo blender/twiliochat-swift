@@ -11,35 +11,44 @@ import TwilioChatClient
 
 class TCHOfflineChannel : TCHChannel {
     
-    private var connected: Bool = false
+//    private var connected: Bool = false
     private var storedChannel: TCHStoredChannel!
-    private var offlineMessages = TCHOfflineMessages()
+    var offlineMessages: TCHOfflineMessages!
     
-    init(_ storedChannel: TCHStoredChannel) {
+    init(_ storedChannel: TCHStoredChannel, storedMessages: [TCHStoredMessage] = []) {
         
         super.init()
         
         self.storedChannel = storedChannel
+        self.offlineMessages = TCHOfflineMessages(storedMessages)
     }
 
-    func load(fromStore store: ChatStore, completion: (() -> ())? = nil) {
+//    func load(offlineChatClient client: TwilioOfflineChatClient, completion: (() -> ())? = nil) {
+//        
+//        self.offlineMessages.load(fromStore: client.store, inChannel: self) {
+//        
+//            self.delegate?.chatClient?(client, channel: self, synchronizationStatusUpdated: self.synchronizationStatus)
+//            completion?()
+//        }
+//    }
+    
+    func save(toStore store: ChatStore) {
         
-        self.offlineMessages.load(fromStore: store, inChannel: self, completion: completion)
+        self.offlineMessages.save(toStore: store, forChannel: self)
     }
     
-    func connect(toChannel channel: TCHChannel) {
-        
-        self.offlineMessages.connect(toMessages: channel.messages, inChannel: channel)
-        
-        self.connected = true
-    }
-    
-    func disconnect(updatingStore store: ChatStore? = nil) {
-        
-        self.offlineMessages.disconnect(updatingStore: store)
-        
-        self.connected = false
-    }
+//    func connect(toChannel channel: TCHChannel) {
+//        
+//        self.offlineMessages.connect(toMessages: channel.messages, inChannel: channel)
+//        
+//        self.connected = true
+//    }
+//    
+//    func disconnect() {
+//        
+//        self.offlineMessages.disconnect()
+//        self.connected = false
+//    }
     
     //weak open var delegate: TCHChannelDelegate!
     

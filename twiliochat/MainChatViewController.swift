@@ -22,7 +22,7 @@ class MainChatViewController: SLKTextViewController {
 //                navigationItem.rightBarButtonItem = nil
 //            }
             
-            joinChannel()
+            joinChannelIfNeeded()
         }
     }
     
@@ -73,9 +73,19 @@ class MainChatViewController: SLKTextViewController {
         tableView!.rowHeight = UITableViewAutomaticDimension
         tableView!.separatorStyle = .none
         
-//        if channel == nil {
-//            channel = ChannelManager.sharedManager.generalChannel
-//        }
+        if self._channel == nil {
+        
+            MessagingManager.sharedManager().loadFirstChannelWithCompletion { (success, error) in
+            
+                guard success else {
+                    return print("\(error?.localizedDescription ?? "Unknow error!")")
+                }
+
+                self.channel = ChannelManager.sharedManager.currentChannel
+                
+                self.joinChannelIfNeeded()
+            }
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -127,7 +137,7 @@ class MainChatViewController: SLKTextViewController {
         return cell
     }
     
-    func joinChannel() {
+    func joinChannelIfNeeded() {
         setViewOnHold(onHold: true)
         
         if channel.status != .joined {
@@ -138,7 +148,10 @@ class MainChatViewController: SLKTextViewController {
         }
         
         loadMessages()
-        setViewOnHold(onHold: false)
+        DispatchQueue.main.async {
+            self.tableView?.reloadData()
+            self.setViewOnHold(onHold: false)
+        }
     }
     
     // Disable user input and show activity indicator
@@ -243,11 +256,7 @@ extension MainChatViewController : TCHChannelDelegate {
                     channel: TCHChannel!,
                     synchronizationStatusUpdated status: TCHChannelSynchronizationStatus) {
         if status == .all {
-            loadMessages()
-            DispatchQueue.main.async {
-                self.tableView?.reloadData()
-                self.setViewOnHold(onHold: false)
-            }
+            joinChannelIfNeeded()
         }
     }
 }

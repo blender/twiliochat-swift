@@ -14,58 +14,70 @@ import TwilioChatClient
 class TCHOfflineMessages: TCHMessages {
     
     private var connected: Bool = false
-    private var channel: TCHChannel?
-    private var offlineMessages: [TCHOfflineMessage] = []
+    private var offlineMessages: [TCHOfflineMessage]!
     
-    func load(fromStore store: ChatStore, inChannel channel: TCHChannel, completion: (() -> ())? = nil) {
+    init(_ storedMessages: [TCHStoredMessage]) {
         
-        let loadGroup = DispatchGroup()
-        
-        loadGroup.enter()
-        store.storedMessages(forChannel: channel) { storedMessages in
-            
-            let offlineMessages = storedMessages.map { (storedMessage) -> TCHOfflineMessage in
-                
-                return TCHOfflineMessage(storedMessage)
-            }
-            
-            self.offlineMessages = offlineMessages
-            
-            loadGroup.leave()
+        self.offlineMessages = storedMessages.map { (storedMessage) -> TCHOfflineMessage in
+         
+            return TCHOfflineMessage(storedMessage)
         }
     }
     
-    func connect(toMessages messagesList: TCHMessages, inChannel channel: TCHChannel) {
-        
-        self.channel = channel
-        messagesList.getLastWithCount(100) { (result, messages) in
-
-            guard let lastMessages = messages else {
-                
-                return
-            }
-            
-            let offlineMessages = lastMessages.map { (message) -> TCHOfflineMessage in
-                
-                return TCHOfflineMessage(message.storable(forChannel: channel))
-            }
-            
-            self.offlineMessages = offlineMessages
-            self.connected = true
-        }
+//    func load(fromStore store: ChatStore, inChannel channel: TCHChannel, completion: (() -> ())? = nil) {
+//        
+//        let loadGroup = DispatchGroup()
+//        
+//        loadGroup.enter()
+//        store.storedMessages(forChannel: channel) { storedMessages in
+//            
+//            let offlineMessages = storedMessages.map { (storedMessage) -> TCHOfflineMessage in
+//                
+//                return TCHOfflineMessage(storedMessage)
+//            }
+//            
+//            self.offlineMessages = offlineMessages
+//            
+//            loadGroup.leave()
+//        }
+//        
+//        loadGroup.notify(queue: DispatchQueue.main) {
+//            
+//            completion?()
+//        }
+//    }
+    
+    func save(toStore store: ChatStore, forChannel channel: TCHChannel) {
+    
+        store.storeMessages(forChannel: channel, messages: self.offlineMessages)
     }
     
-    func disconnect(updatingStore store: ChatStore? = nil) {
-        
-        self.connected = false
-        
-        guard let channel = self.channel else {
-            
-            return
-        }
-        
-        store?.storeMessages(forChannel: channel, messages: self.offlineMessages)
-    }
+//    func connect(toMessages messagesList: TCHMessages, inChannel channel: TCHChannel) {
+//        
+//        self.channel = channel
+//        messagesList.getLastWithCount(100) { (result, messages) in
+//
+//            guard let lastMessages = messages else {
+//                
+//                return
+//            }
+//            
+//            let offlineMessages = lastMessages.map { (message) -> TCHOfflineMessage in
+//                
+//                return TCHOfflineMessage(message.storable(forChannel: channel))
+//            }
+//            
+//            self.offlineMessages = offlineMessages
+//            self.connected = true
+//        }
+//    }
+//    
+//    func disconnect() {
+//        
+//        self.connected = false
+//        self.channel = nil
+//        self.offlineMessages = []
+//    }
 
     override var lastConsumedMessageIndex: NSNumber! {
         
