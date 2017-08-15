@@ -2,11 +2,13 @@ import UIKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
+    
     var window: UIWindow?
+    var messagingManager: MessagingManager = TCHMessagingManager.sharedManager()
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        MessagingManager.sharedManager().presentLaunchScreen()
-        MessagingManager.sharedManager().presentRootViewController()
+        self.presentLaunchScreen()
+        self.presentRootViewController()
         return true
     }
     
@@ -31,7 +33,56 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
+}
+
+
+
+extension AppDelegate {
     
+    static var sharedDelegate: AppDelegate {
+        
+        return UIApplication.shared.delegate as! AppDelegate
+    }
     
+    func presentViewController(controller: UIViewController) {
+        
+        guard let window = self.window else { return }
+        
+        window.rootViewController = controller
+    }
+    
+    func storyBoardWithName(name:String) -> UIStoryboard {
+        
+        return UIStoryboard(name:name, bundle: Bundle.main)
+    }
+    
+    func presentViewControllerByName(viewController: String) {
+        
+        presentViewController(controller: storyBoardWithName(name: "Main").instantiateViewController(withIdentifier: viewController))
+    }
+    
+    func presentLaunchScreen() {
+        
+        presentViewController(controller: storyBoardWithName(name: "LaunchScreen").instantiateInitialViewController()!)
+    }
+
+    func presentRootViewController() {
+        
+        if (self.messagingManager.user == nil) {
+            
+            self.presentViewControllerByName(viewController: "LoginViewController")
+            return
+        }
+        
+        self.messagingManager.startup { success, error in
+            
+            guard success else {
+                print("\(error?.localizedDescription ?? "Unknow error!")")
+                return
+            }
+            
+            self.presentViewControllerByName(viewController: "RevealViewController")
+        }
+    }
 }
 

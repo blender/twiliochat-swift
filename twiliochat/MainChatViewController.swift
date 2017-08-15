@@ -8,26 +8,10 @@ class MainChatViewController: SLKTextViewController {
     static let TWCOpenGeneralChannelSegue = "OpenGeneralChat"
     static let TWCLabelTag = 200
     
-    var _channel:TCHChannel!
-    var channel:TCHChannel! {
-        get {
-            return _channel
-        }
-        set(channel) {
-            _channel = channel
-            title = _channel.friendlyName
-            _channel.delegate = self
-            
-//            if _channel == ChannelManager.sharedManager.generalChannel {
-//                navigationItem.rightBarButtonItem = nil
-//            }
-            
-            joinChannelIfNeeded()
-        }
-    }
+    fileprivate var channel:ActiveChannel?
     
-    var messages:Set<TCHMessage> = Set<TCHMessage>()
-    var sortedMessages:[TCHMessage]!
+    var messages:Set<StoredMessage> = Set<StoredMessage>()
+    var sortedMessages:[StoredMessage]!
     
     @IBOutlet weak var revealButtonItem: UIBarButtonItem!
     @IBOutlet weak var actionButtonItem: UIBarButtonItem!
@@ -73,18 +57,14 @@ class MainChatViewController: SLKTextViewController {
         tableView!.rowHeight = UITableViewAutomaticDimension
         tableView!.separatorStyle = .none
         
-        if self._channel == nil {
-        
-            MessagingManager.sharedManager().loadFirstChannelWithCompletion { (success, error) in
-            
-                guard success else {
-                    return print("\(error?.localizedDescription ?? "Unknow error!")")
-                }
+        var messagingManager = AppDelegate.sharedDelegate.messagingManager
+        messagingManager.delegate = self
+    
+        if self.channel == nil {
 
-                self.channel = ChannelManager.sharedManager.currentChannel
-                
-                self.joinChannelIfNeeded()
-            }
+            let channelManager = messagingManager.channelManager
+            self.messagingManager(messagingManager
+                , choseChannel: channelManager.channels.first)
         }
     }
     
@@ -98,6 +78,7 @@ class MainChatViewController: SLKTextViewController {
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: NSInteger) -> Int {
+        
         return messages.count
     }
     
@@ -117,13 +98,17 @@ class MainChatViewController: SLKTextViewController {
         return cell
     }
     
-    func getChatCellForTableView(tableView: UITableView, forIndexPath indexPath:IndexPath, message: TCHMessage) -> UITableViewCell {
+    func getChatCellForTableView(tableView: UITableView, forIndexPath indexPath:IndexPath, message: ChatMessage) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: MainChatViewController.TWCChatCellIdentifier, for:indexPath as IndexPath)
         
         let chatCell: ChatTableCell = cell as! ChatTableCell
-        let timestamp = DateTodayFormatter().stringFromDate(date: NSDate.dateWithISO8601String(dateString: message.timestamp))
+        let timestamp = DateTodayFormatter().stringFromDate(date: message.timestamp as NSDate)
         
         chatCell.setUser(user: message.author ?? "[Unknown author]", message: message.body, date: timestamp ?? "[Unknown date]")
+        
+        // TODO: advanceLastConsumedMessageIndex as it has been displayed on screen
+        // maybe add a view model to assist UI clients
+        // work on the basis of accessing a dedicated array of messages which imply consumption...
         
         return chatCell
     }
@@ -137,21 +122,15 @@ class MainChatViewController: SLKTextViewController {
         return cell
     }
     
-    func joinChannelIfNeeded() {
-        setViewOnHold(onHold: true)
+    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         
-        if channel.status != .joined {
-            channel.join { result in
-                print("Channel Joined")
-            }
-            return
-        }
+        return true
+    }
+    
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle
+        , forRowAt indexPath: IndexPath) {
         
-        loadMessages()
-        DispatchQueue.main.async {
-            self.tableView?.reloadData()
-            self.setViewOnHold(onHold: false)
-        }
+        self.channel?.removeMessage(atIndex: indexPath.row)
     }
     
     // Disable user input and show activity indicator
@@ -162,20 +141,20 @@ class MainChatViewController: SLKTextViewController {
     
     override func didPressRightButton(_ sender: Any!) {
         textView.refreshFirstResponder()
-        sendMessage(inputMessage: textView.text)
+        self.sendMessage(inputMessage: textView.text)
         super.didPressRightButton(sender)
     }
     
     // MARK: - Chat Service
     
     func sendMessage(inputMessage: String) {
-        let message = channel.messages.createMessage(withBody: inputMessage)
-        channel.messages.send(message, completion: nil)
+
+        self.channel?.sendMessage(inputMessage)
     }
     
-    func addMessages(newMessages:Set<TCHMessage>) {
-        messages =  messages.union(newMessages)
-        sortMessages()
+    private func addMessages(_ newMessages: [StoredMessage]) {
+        self.messages =  messages.union(Set(newMessages))
+        self.sortMessages()
         DispatchQueue.main.async {
             self.tableView!.reloadData()
             if self.messages.count > 0 {
@@ -184,41 +163,29 @@ class MainChatViewController: SLKTextViewController {
         }
     }
     
-    func sortMessages() {
+    fileprivate func sortMessages() {
         sortedMessages = messages.sorted { a, b in a.timestamp > b.timestamp }
     }
     
-    func loadMessages() {
+    fileprivate func clearMessages() {
         
         messages.removeAll()
-        if channel.synchronizationStatus == .all {
-            channel.messages.getLastWithCount(100) { (result, items) in
-                self.addMessages(newMessages: Set(items!))
-            }
-        }
     }
     
-    func scrollToBottom() {
+    fileprivate func loadMessages() {
+        
+        self.clearMessages()
+        
+        guard let messages = self.channel?.messages else { return }
+        
+        self.addMessages(messages)
+    }
+    
+    private func scrollToBottom() {
         if messages.count > 0 {
             let indexPath = IndexPath(row: 0, section: 0)
             tableView!.scrollToRow(at: indexPath, at: .bottom, animated: true)
         }
-    }
-    
-    func leaveChannel() {
-        channel.leave { result in
-            if (result?.isSuccessful())! {
-                let menuViewController = self.revealViewController().rearViewController as! MenuViewController
-                menuViewController.deselectSelectedChannel()
-                self.revealViewController().rearViewController.performSegue(withIdentifier: MainChatViewController.TWCOpenGeneralChannelSegue, sender: nil)
-            }
-        }
-    }
-    
-    // MARK: - Actions
-    
-    @IBAction func actionButtonTouched(_ sender: UIBarButtonItem) {
-        leaveChannel()
     }
     
     @IBAction func revealButtonTouched(_ sender: AnyObject) {
@@ -226,37 +193,78 @@ class MainChatViewController: SLKTextViewController {
     }
 }
 
-extension MainChatViewController : TCHChannelDelegate {
-    // TODO is this called even for channels that the user is not subscribed to?
-    func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, messageAdded message: TCHMessage!) {
-        if !messages.contains(message) {
-            addMessages(newMessages: [message])
+
+
+extension MainChatViewController: MessagingDelegate {
+    
+    private func activateChannel(_ channel: StoredChannel, inManager manager: ChannelManager) {
+    
+        manager.activateChannel(channel) { [weak self] activeChannel in
+            
+            self?.channel = activeChannel
+            self?.title = self?.channel?.displayName
+            self?.loadMessages()
         }
     }
     
-    func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, memberJoined member: TCHMember!) {
-        addMessages(newMessages: [StatusMessage(member:member, status:.Joined)])
+    func messagingManager(_ manager: MessagingManager, addedMessage message: StoredMessage, toChannel channel: StoredChannel) {
+     
+        guard self.channel?.sid == channel.sid else { return }
+
+        // TODO: this refreshes everything... maybe sync change instead
+        self.activateChannel(channel, inManager: manager.channelManager)
     }
     
-    func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, memberLeft member: TCHMember!) {
-        addMessages(newMessages: [StatusMessage(member:member, status:.Left)])
+    func messagingManager(_ manager: MessagingManager, deletedMessage message: StoredMessage, fromChannel channel: StoredChannel) {
+
+        guard self.channel?.sid == channel.sid else { return }
+        
+        // TODO: this refreshes everything... maybe sync change instead
+        self.activateChannel(channel, inManager: manager.channelManager)
     }
     
-    // TODO a channel can not be added via the TCHChannelDelegate but it is notified on deletion
-    func chatClient(_ client: TwilioChatClient!, channelDeleted channel: TCHChannel!) {
-        DispatchQueue.main.async {
-            if channel == self.channel {
-                self.revealViewController().rearViewController
-                    .performSegue(withIdentifier: MainChatViewController.TWCOpenGeneralChannelSegue, sender: nil)
-            }
+    func messagingManager(_ manager: MessagingManager, updatedMessage: StoredMessage, inChannel channel: StoredChannel) {
+        
+        guard self.channel?.sid == channel.sid else { return }
+        
+        // TODO: this refreshes everything... maybe sync change instead
+        self.activateChannel(channel, inManager: manager.channelManager)
+    }
+
+    func messagingManager(_ manager: MessagingManager, updatedChannel channel: StoredChannel) {
+        
+        guard self.channel?.sid == channel.sid else { return }
+        
+        self.activateChannel(channel, inManager: manager.channelManager)
+    }
+    
+    func messagingManager(_ manager: MessagingManager, choseChannel channel: StoredChannel?) {
+    
+        guard self.channel?.sid != channel?.sid else {
+            
+            return
         }
+        
+        guard let chosenChannel = channel else {
+            
+            self.channel = nil
+            self.clearMessages()
+            return
+        }
+        
+        self.activateChannel(chosenChannel, inManager: manager.channelManager)
     }
     
-    func chatClient(_ client: TwilioChatClient!,
-                    channel: TCHChannel!,
-                    synchronizationStatusUpdated status: TCHChannelSynchronizationStatus) {
-        if status == .all {
-            joinChannelIfNeeded()
-        }
+    func channelManager(_: ChannelManager, deletedChannel: StoredChannel) {
+        
+        // TODO: if this is the current channel we must reset
     }
+    
+    func channelManager(_ manager: ChannelManager, updatedChannel channel: StoredChannel) {
+        
+        guard self.channel?.sid == channel.sid else { return }
+        
+        self.activateChannel(channel, inManager: manager)
+    }
+
 }

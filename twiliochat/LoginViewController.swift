@@ -5,10 +5,11 @@ class LoginViewController: UIViewController {
     @IBOutlet weak var usernameTextField: UITextField!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
+    var messagingManager = AppDelegate.sharedDelegate.messagingManager
+    
     // MARK: - Injectable Properties
     
     var alertDialogControllerClass = AlertDialogController.self
-    var MessagingClientClass = MessagingManager.self
     
     // MARK: - Initialization
     
@@ -60,9 +61,8 @@ class LoginViewController: UIViewController {
             view.isUserInteractionEnabled = false
             activityIndicator.startAnimating()
             
-            let MessagingManager = MessagingClientClass.sharedManager()
             if let username = usernameTextField.text {
-                MessagingManager.loginWithUsername(username: username, completion: handleResponse)
+                self.messagingManager.loginWithUsername(username, completion: handleResponse)
             }
         }
     }
@@ -83,6 +83,8 @@ class LoginViewController: UIViewController {
         self.activityIndicator.stopAnimating()
         if let error = error, !succeeded {
             self.showError(message: error.localizedDescription)
+        } else {
+            AppDelegate.sharedDelegate.presentViewControllerByName(viewController: "RevealViewController")
         }
         self.view.isUserInteractionEnabled = true
     }

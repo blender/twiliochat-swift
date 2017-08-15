@@ -1,36 +1,250 @@
 import UIKit
 
-class MessagingManager: NSObject {
+
+
+protocol MessagingDelegate : ChannelDelegate {
     
-    static let _sharedManager = MessagingManager()
+    func messagingManager(_: MessagingManager, addedMessage: StoredMessage, toChannel: StoredChannel)
+    func messagingManager(_: MessagingManager, deletedMessage: StoredMessage, fromChannel: StoredChannel)
+    func messagingManager(_: MessagingManager, updatedMessage: StoredMessage, inChannel: StoredChannel)
     
-    fileprivate var client: TwilioChatClient?
+    func messagingManager(_: MessagingManager, choseChannel: StoredChannel?)
+}
+
+
+
+typealias StartupHandler = ((Bool, NSError?) -> ())
+
+
+
+protocol MessagingManager {
+    
+    static func sharedManager() -> MessagingManager
+    
+    var channelManager: ChannelManager { get }
+    var delegate: MessagingDelegate? { get set }
+    
+    var user: StoredUser? { get }
+    
+    func loginWithUsername(_: String, completion: StartupHandler?)
+    func logout()
+    
+    func startup(completion: StartupHandler?)
+    func shutdown()
+    
+    func sendMessage(_: String, inChannel: ChatChannel)
+    func removeMessage(atIndex: Int, fromChannel: ChatChannel)
+    
+    func activateChannel(_: ChatChannel, completion: @escaping ActiveChannelHandler)
+}
+
+
+
+extension TCHMessagingManager: MessagingManager {
+    
+    static func sharedManager() -> MessagingManager {
+        
+        return _sharedManager
+    }
+
+    var user: StoredUser? {
+        
+        guard let client = self.client else {
+            
+            return nil
+        }
+        
+        return client.user
+    }
+    
+    func startup(completion: StartupHandler?) {
+        
+        print("\(String(describing: type(of: self))).\(#function) - \(Date())")
+        
+        self.startup = completion
+        
+        guard self.reachability.isReachable else {
+            
+            self.initializeClientWithToken(token: nil)
+            return
+        }
+                
+        requestTokenWithCompletion { succeeded, token in
+            
+            if let token = token, succeeded {
+                
+                self.initializeClientWithToken(token: token)
+            }
+            else {
+                
+                self.initializeClientWithToken(token: nil)
+            }
+        }
+    }
+    
+    func shutdown() {
+        
+        self.client.shutdown()
+    }
+    
+    func loginWithUsername(_ username: String,
+                           completion: StartupHandler?) {
+        
+        SessionManager.loginWithUsername(username: username)
+        self.startup(completion: completion)
+    }
+    
+    func logout() {
+        
+        SessionManager.logout()
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.client.shutdown()
+        }
+        self.connected = false
+    }
+
+    func sendMessage(_ body: String, inChannel channel: ChatChannel) {
+        
+        self.client.sendMessage(body, inChannel: channel)
+    }
+    
+    func removeMessage(atIndex index: Int, fromChannel channel: ChatChannel) {
+        
+        self.client.removeMessage(atIndex: index, fromChannel: channel)
+    }
+    
+    func activateChannel(_ channel: ChatChannel, completion: @escaping ActiveChannelHandler) {
+        
+        guard let chatStore = self.client.chatStore else {
+            
+            completion(nil)
+            return
+        }
+        
+        chatStore.storedChannels { storedChannels in
+            
+            let matchingChannels = storedChannels.filter { $0.sid == channel.sid }
+            
+            guard let storedChannel = matchingChannels.first else {
+                
+                completion(nil)
+                return
+            }
+            
+            let group = DispatchGroup()
+            
+            var users: [StoredUser] = []
+            var members: [StoredMember] = []
+            var messages: [StoredMessage] = []
+            
+            group.enter() // .storedUsers
+            chatStore.storedUsers { storedUsers in
+                
+                users = storedUsers
+                group.leave() // .storedUsers
+            }
+
+            group.enter() // .storedMembers
+            chatStore.storedMembers(forChannel: storedChannel) { storedMembers in
+                
+                members = storedMembers
+                group.leave() // .storedMembers
+            }
+            
+            group.enter() // .storedMessages
+            chatStore.storedMessages(forChannel: storedChannel) { storedMessages in
+                
+                messages = storedMessages
+                group.leave() // .storedMessages
+            }
+
+            group.notify(queue: DispatchQueue.main) {
+                
+                let activeChannel = ActiveChannel(storedChannel
+                    , storedUsers: users, storedMembers: members
+                    , storedMessages: messages)
+                
+                activeChannel.manager = self.channelManager
+                completion(activeChannel)
+            }
+        }
+    }
+}
+
+
+
+class TCHMessagingManager: NSObject {
+    
+    static let _sharedManager = TCHMessagingManager()
+    
+    lazy var channelManager: ChannelManager = {
+        
+        let manager = SharecareChannelManager(messagingManager: self)
+        
+        self.chatStore.storedChannels{ storedChannels in
+
+            storedChannels.forEach { storedChannel in
+                
+                manager.addChannel(storedChannel)
+            }
+        }
+        
+        return manager
+    }()
+    
+    var delegate: MessagingDelegate?
+
+    fileprivate var startup: StartupHandler?
+    fileprivate var client: ChatClient!
     fileprivate var reachability: Reachability!
     fileprivate var isReachable: Bool!
     fileprivate var requestTokenWithCompletionActive = false
-    
-    lazy var offlineClient: TwilioOfflineChatClient = {
+    fileprivate var chatStore: ChatStore!
 
-        let client = TwilioOfflineChatClient(delegate: self)
-        
-        return client
-    }()
-    var delegate:ChannelManager?
     var connected = false
-    
-    var userIdentity:String {
-        return SessionManager.getUsername()
-    }
-    
-    var hasIdentity: Bool {
-        return SessionManager.isLoggedIn()
-    }
     
     var rootViewControllerName: String?
     
-    override init() {
+    init(fromChatStore chatStore: ChatStore = UserDefaultChatStore.shared) {
+        
         super.init()
-        delegate = ChannelManager.sharedManager
+        
+        #if DEBUG
+        chatStore.storedUsers { storedUsers in
+            
+            storedUsers.forEach { storedUser in
+                
+                print("\(String(describing: type(of: self))).\(#function) - sid: \(storedUser.identity), friendlyName: \(storedUser.friendlyName ?? "nil")")
+            }
+        }
+        
+        chatStore.storedChannels { storedChannels in
+            
+            storedChannels.forEach { storedChannel in
+                
+                print("\(String(describing: type(of: self))).\(#function) - sid: \(storedChannel.sid), friendlyName: \(storedChannel.friendlyName ?? "nil")")
+                
+                chatStore.storedMessages(forChannel: storedChannel) { storedMessages in
+                    
+                    storedMessages.forEach { storedMessage in
+                        
+                        print("\(String(describing: type(of: self))).\(#function) - sid: \(storedMessage.sid), channel: \(storedMessage.channel), body: \(storedMessage.body ?? "nil")")
+                    }
+                }
+                
+                chatStore.storedMembers(forChannel: storedChannel) { storedMembers in
+                    
+                    storedMembers.forEach { storedMember in
+                        
+                        print("\(String(describing: type(of: self))).\(#function) - identity: \(storedMember.identity), channel: \(storedMember.channel), lastConsumedMessageIndex: \(storedMember.lastConsumedMessageIndex ?? -1)")
+                    }
+                }
+
+            }
+        }
+        #endif
+        
+        self.chatStore = chatStore
 
         self.reachability = Reachability()
         self.isReachable = self.reachability.isReachable
@@ -71,7 +285,8 @@ class MessagingManager: NSObject {
             }
         } else {
 
-            self.offlineClient.disconnect()
+            // alternative to disconnect i.e. kill online client
+            //self.offlineClient.disconnect()
         }
     }
     
@@ -80,165 +295,20 @@ class MessagingManager: NSObject {
         self.reachability.stopNotifier()
     }
     
-    class func sharedManager() -> MessagingManager {
-        return _sharedManager
-    }
-    
-//    func offlineMessages(forChannel channel: TCHChannel, completion: ([TCHOfflineMessage]) -> ()) {
-//
-//        self.offlineClient.store.storedMessages(forChannel: channel) { storedMessages in
-//            
-//            let offlineMessages = storedMessages.map { (storedMessage) -> TCHOfflineMessage in
-//                
-//                return TCHOfflineMessage(storedMessage)
-//            }
-//            
-//            completion(offlineMessages)
-//        }
-//    }
-    
-    func presentRootViewController() {
-        
-        if (!self.hasIdentity) {
-            presentViewControllerByName(viewController: "LoginViewController")
-            return
-        }
-
-        connectClientWithCompletion { success, error in
-            
-            guard success else {
-                print("\(error?.localizedDescription ?? "Unknow error!")")
-                return
-            }
-            
-            print("Delegate method will load views when sync is complete")
-        }
-
-        print("\(String(describing: type(of: self))).\(#function) - \(Date())")
-    }
-    
-    func presentViewControllerByName(viewController: String) {
-        
-        let name = "Main.\(viewController)"
-        
-        guard name != self.rootViewControllerName else {
-            
-            return
-        }
-        
-        self.rootViewControllerName = name
-        presentViewController(controller: storyBoardWithName(name: "Main").instantiateViewController(withIdentifier: viewController))
-    }
-    
-    func presentLaunchScreen() {
-        let name = "LaunchScreen.Initial"
-
-        guard name != self.rootViewControllerName else {
-            
-            return
-        }
-
-        self.rootViewControllerName = name
-        presentViewController(controller: storyBoardWithName(name: "LaunchScreen").instantiateInitialViewController()!)
-    }
-    
-    private func presentViewController(controller: UIViewController) {
-        let window = UIApplication.shared.delegate!.window!!
-
-        window.rootViewController = controller
-    }
-    
-    fileprivate var mainChatViewController: MainChatViewController? {
-    
-        let window = UIApplication.shared.delegate!.window!!
-    
-        return window.rootViewController?.childViewControllers.last?.childViewControllers.first as? MainChatViewController
-    }
-    
-    func storyBoardWithName(name:String) -> UIStoryboard {
-        return UIStoryboard(name:name, bundle: Bundle.main)
-    }
-    
     // MARK: User and session management
     
-    func loginWithUsername(username: String,
-                           completion: @escaping (Bool, NSError?) -> Void) {
-        SessionManager.loginWithUsername(username: username)
-        connectClientWithCompletion(completion: completion)
-    }
-    
-    func logout() {
-        SessionManager.logout()
-        DispatchQueue.global(qos: .userInitiated).async {
-            self.offlineClient.shutdown()
-        }
-        self.connected = false
-    }
-    
-    // MARK: Twilio Client
-    
-//    func loadGeneralChatRoomWithCompletion(completion:@escaping (Bool, NSError?) -> Void) {
-//        
-//        guard self.connected else { return completion(false, nil) }
-//        
-//        ChannelManager.sharedManager.joinGeneralChatRoomWithCompletion { succeeded in
-//            if succeeded {
-//                completion(succeeded, nil)
-//            }
-//            else {
-//                let error = self.errorWithDescription(description: "Could not join General channel", code: 300)
-//                completion(succeeded, error)
-//            }
-//        }
-//    }
-    
-    func loadFirstChannelWithCompletion(completion:@escaping (Bool, NSError?) -> Void) {
+    func initializeClientWithToken(token: String?) {
         
-        ChannelManager.sharedManager.joinFirstChannelWithCompletion { succeeded in
-            
-            if succeeded {
-                completion(succeeded, nil)
-            }
-            else {
-                let error = self.errorWithDescription(description: "Could not join first channel", code: 300)
-                completion(succeeded, error)
-            }
-        }
-    }
-    
-    func connectClientWithCompletion(completion: @escaping (Bool, NSError?) -> Void) {
-        
-        print("\(String(describing: type(of: self))).\(#function) - \(Date())")
-
-        guard self.reachability.isReachable else {
-            
-            completion(true, nil)
-            self.chatClient(self.offlineClient, synchronizationStatusUpdated: self.offlineClient.synchronizationStatus)
-            return
-        }
-        
-        requestTokenWithCompletion { succeeded, token in
-            if let token = token, succeeded {
-                self.initializeClientWithToken(token: token)
-                completion(succeeded, nil)
-            }
-            else {
-                let error = self.errorWithDescription(description: "Could not get access token", code:301)
-                completion(succeeded, error)
-                self.chatClient(self.offlineClient, synchronizationStatusUpdated: self.offlineClient.synchronizationStatus)
-            }
-        }
-    }
-    
-    func initializeClientWithToken(token: String) {
-        let accessManager = TwilioAccessManager(token:token, delegate:self)
         UIApplication.shared.isNetworkActivityIndicatorVisible = true
-        TwilioChatClient.chatClient(withToken: token, properties: nil, delegate: self) { [weak self] result, chatClient in
-            guard (result?.isSuccessful() ?? false) else { return }
+        
+        ChatClient.chatClient(withToken: token, properties: nil, delegate: self, chatStore: UserDefaultChatStore.shared) { [weak self] result, chatClient in
+            
+            guard result == true else { return }
             
             UIApplication.shared.isNetworkActivityIndicatorVisible = true
+            
             self?.connected = true
-            self?.client = chatClient // owership?
+            self?.client = chatClient
         }
     }
     
@@ -247,6 +317,7 @@ class MessagingManager: NSObject {
         guard self.reachability.isReachable else { return completion(false, nil) }
         
         if let device = UIDevice.current.identifierForVendor?.uuidString {
+            
             TokenRequestHandler.fetchToken(params: ["device": device, "identity":SessionManager.getUsername()]) {response,error in
                 var token: String?
                 token = response["token"] as? String
@@ -256,88 +327,89 @@ class MessagingManager: NSObject {
     }
     
     func errorWithDescription(description: String, code: Int) -> NSError {
+        
         let userInfo = [NSLocalizedDescriptionKey : description]
         return NSError(domain: "app", code: code, userInfo: userInfo)
     }
 }
 
-// MARK: - TwilioChatClientDelegate
-extension MessagingManager : TwilioChatClientDelegate {
-    func chatClient(_ client: TwilioChatClient!, channelAdded channel: TCHChannel!) {
+
+
+extension TCHMessagingManager : ChatClientDelegate {
+    
+    func chatClient(_ client: ChatClient, channelAdded channel: TCHChannel) {
         
-        self.offlineClient.store.addChannel(channel)
-        self.delegate?.chatClient(client, channelAdded: channel)
+        let storeableChannel = channel.storable
+        
+        //self.chatStore.addChannel(storeableChannel)
+        self.channelManager.addChannel(storeableChannel)
+        self.delegate?.channelManager(self.channelManager, addedChannel: storeableChannel)
     }
     
-    func chatClient(_ client: TwilioChatClient!, channelChanged channel: TCHChannel!) {
+    func chatClient(_ client: ChatClient, channel: TCHChannel, synchronizationStatusUpdated status: TCHChannelSynchronizationStatus) {
+
+        guard status == .all else { return }
         
-        self.offlineClient.store.updateChannel(channel)
-        self.delegate?.chatClient(client, channelChanged: channel)
+        let storeableChannel = channel.storable
+        
+        //self.chatStore.updateChannel(storeableChannel)
+        self.channelManager.updateChannel(storeableChannel)
+        self.delegate?.channelManager(self.channelManager, updatedChannel: storeableChannel)
     }
     
-    func chatClient(_ client: TwilioChatClient!, channelDeleted channel: TCHChannel!) {
+    func chatClient(_ client: ChatClient, channelDeleted channel: TCHChannel) {
         
-        self.offlineClient.store.deleteChannel(channel)
-        self.delegate?.chatClient(client, channelDeleted: channel)
+        let storeableChannel = channel.storable
+        
+        //self.chatStore.deleteChannel(storeableChannel)
+        self.channelManager.deleteChannel(storeableChannel)
+        self.delegate?.channelManager(self.channelManager, deletedChannel: storeableChannel)
     }
     
-    func chatClient(_ client: TwilioChatClient!, synchronizationStatusUpdated status: TCHClientSynchronizationStatus) {
+    func chatClient(_ client: ChatClient, synchronizationStatusUpdated status: TCHClientSynchronizationStatus) {
         
         if status == TCHClientSynchronizationStatus.completed {
 
-            let isOnlineClient = (client == self.client)
-            
-            if isOnlineClient {
-            
-                self.offlineClient.connect(toClient: client)
-            }
-            
             UIApplication.shared.isNetworkActivityIndicatorVisible = false
-            ChannelManager.sharedManager.channelsList = client.channelsList()
+
+            print("\(String(describing: type(of: self))).\(#function) - \(Date())")
             
-            // TODO behaviour is currently based on which client comes last - which is usually the onlineClient
-            ChannelManager.sharedManager.connected = isOnlineClient
-            ChannelManager.sharedManager.populateChannels()
-            
-            loadFirstChannelWithCompletion { (success, error) in
-
-                guard success else {
-                    return print("\(error?.localizedDescription ?? "Unknow error!")")
-                }
-
-                guard let mainChatViewController = self.mainChatViewController else {
-                    
-                    self.presentViewControllerByName(viewController: "RevealViewController")
-                    return
-                }
-
-                mainChatViewController.channel = ChannelManager.sharedManager.currentChannel
-            }
+            self.startup?(true, nil)
+            self.startup = nil
         }
-        self.delegate?.chatClient(client, synchronizationStatusUpdated: status)
     }
     
-    // TODO is this called even for channels that the user is not subscribed to?
-    // Is there a difference between TCHChannelDelegate and TwilioChatClientDelegate in this respect?
-    func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, messageAdded message: TCHMessage!) {
-        
-        self.offlineClient.store.addMessage(message, forChannel: channel)
+    func chatClient(_ client: ChatClient, channel: TCHChannel, messageAdded message: TCHMessage) {
+
+        let storeableMessage = message.storable(forChannel: channel)
+        let storeableChannel = channel.storable
+
+        self.delegate?.messagingManager(self, addedMessage: storeableMessage, toChannel: storeableChannel)
     }
     
-    func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, message: TCHMessage!, updated: TCHMessageUpdate) {
+    func chatClient(_ client: ChatClient, channel: TCHChannel, message: TCHMessage, updated: TCHMessageUpdate) {
         
-        self.offlineClient.store.updateMessage(message, forChannel: channel)
+        let storeableMessage = message.storable(forChannel: channel)
+        let storeableChannel = channel.storable
+        
+        self.delegate?.messagingManager(self, updatedMessage: storeableMessage, inChannel: storeableChannel)
     }
     
-    func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, messageDeleted message: TCHMessage!) {
-        
-        self.offlineClient.store.deleteMessage(message, forChannel: channel)
+    func chatClient(_ client: ChatClient, channel: TCHChannel, messageDeleted message: TCHMessage) {
+
+        let storeableMessage = message.storable(forChannel: channel)
+        let storeableChannel = channel.storable
+
+        self.delegate?.messagingManager(self, deletedMessage: storeableMessage, fromChannel: storeableChannel)
     }
 }
 
-// MARK: - TwilioAccessManagerDelegate
-extension MessagingManager : TwilioAccessManagerDelegate {
-    func accessManagerTokenWillExpire(_ accessManager: TwilioAccessManager) {
+
+
+extension TCHMessagingManager : TwilioAccessManagerDelegate {
+    
+    public func accessManagerTokenWillExpire(_ accessManager: TwilioAccessManager) {
+        
         requestTokenWithCompletion { succeeded, token in
             if (succeeded) {
                 accessManager.updateToken(token!)
@@ -349,6 +421,7 @@ extension MessagingManager : TwilioAccessManagerDelegate {
     }
     
     func accessManager(_ accessManager: TwilioAccessManager!, error: Error!) {
+        
         print("Access manager error: \(error.localizedDescription)")
     }
 }

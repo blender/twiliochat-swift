@@ -10,21 +10,33 @@ import Foundation
 
 
 
+public protocol ChatMessage {
+    
+    var sid: String { get }
+    var index: Int { get }
+    var author: String? { get }
+    var body: String? { get }
+    var timestamp: Date { get }
+    var dateUpdated: Date? { get }
+    var lastUpdatedBy: String? { get }
+}
+
+
+
 extension TCHMessage {
     
-    func storable(forChannel channel: TCHChannel) -> TCHStoredMessage {
+    func storable(forChannel channel: TCHChannel) -> StoredMessage {
         
-        return TCHStoredMessage(sid: self.sid, index: self.index, author: self.author, body: self.body, timestamp: self.timestamp
-//            , timestampAsDate: self.timestampAsDate
-            , dateUpdated: self.dateUpdated
-//            , dateUpdatedAsDate: self.dateUpdatedAsDate
+        return StoredMessage(sid: self.sid, index: self.index.intValue
+            , author: self.author, body: self.body, timestamp: self.timestampAsDate
+            , dateUpdated: self.dateUpdatedAsDate
             , lastUpdatedBy: self.lastUpdatedBy, channel: channel.sid)
     }
 }
 
 
 
-struct TCHStoredMessage {
+struct StoredMessage: ChatMessage {
     
     enum Keys: String {
         
@@ -33,25 +45,21 @@ struct TCHStoredMessage {
         case author
         case body
         case timestamp
-        case timestampAsDate
         case dateUpdated
-        case dateUpdatedAsDate
         case lastUpdatedBy
         case channel
     }
     
-    var sid: String!
-    var channel: String!
-    var index: NSNumber?
+    var sid: String
+    var index: Int
+    var channel: String
     var author: String?
     var body: String?
-    var timestamp: String?
-//    var timestampAsDate: Date!
-    var dateUpdated: String?
-//    var dateUpdatedAsDate: Date!
+    var timestamp: Date
+    var dateUpdated: Date?
     var lastUpdatedBy: String?
     
-    init(sid: String!, index: NSNumber?, author: String?, body: String?, timestamp: String?, dateUpdated: String?, lastUpdatedBy: String?, channel: String!) {
+    init(sid: String, index: Int, author: String?, body: String?, timestamp: Date, dateUpdated: Date?, lastUpdatedBy: String?, channel: String) {
         
         self.sid = sid
         self.index = index
@@ -63,7 +71,7 @@ struct TCHStoredMessage {
         self.channel = channel
     }
     
-    init(message: TCHMessage, inChannel channel: TCHChannel) {
+    init(message: ChatMessage, inChannel channel: ChatChannel) {
         
         self.init(sid: message.sid, index: message.index, author: message.author, body: message.body, timestamp: message.timestamp
             , dateUpdated: message.dateUpdated, lastUpdatedBy: message.lastUpdatedBy, channel: channel.sid)
@@ -73,14 +81,14 @@ struct TCHStoredMessage {
         
         var dictionary:Dictionary<String, Any> = [:]
         
-        dictionary[Keys.sid.rawValue] = self.sid as String
-        dictionary[Keys.channel.rawValue] = self.channel as String
+        dictionary[Keys.sid.rawValue] = self.sid
+        dictionary[Keys.index.rawValue] = self.index
+        dictionary[Keys.channel.rawValue] = self.channel
+        dictionary[Keys.timestamp.rawValue] = self.timestamp.timeIntervalSince1970
         
-        self.index.flatMap { dictionary[Keys.index.rawValue] = $0 }
         self.author.flatMap { dictionary[Keys.author.rawValue] = $0 }
         self.body.flatMap { dictionary[Keys.body.rawValue] = $0 }
-        self.timestamp.flatMap { dictionary[Keys.timestamp.rawValue] = $0 }
-        self.dateUpdated.flatMap { dictionary[Keys.dateUpdated.rawValue] = $0 }
+        self.dateUpdated.flatMap { dictionary[Keys.dateUpdated.rawValue] = $0.timeIntervalSince1970 }
         self.lastUpdatedBy.flatMap { dictionary[Keys.lastUpdatedBy.rawValue] = $0 }
         
         let d = try? JSONSerialization.data(withJSONObject: dictionary, options: .init(rawValue: 0))
@@ -88,42 +96,45 @@ struct TCHStoredMessage {
         return d!
     }
     
-    static func fromJSON(data: Data) -> TCHStoredMessage? {
+    static func fromJSON(data: Data) -> StoredMessage? {
         
         let d = (try? JSONSerialization.jsonObject(with: data, options: .init(rawValue: 0))) as? Dictionary<String, Any>
         
+        let _timestamp = (d?[Keys.timestamp.rawValue] as? TimeInterval).flatMap { Date(timeIntervalSince1970: $0) }
+        
         guard let sid = d?[Keys.sid.rawValue] as? String
-            , let channel = d?[Keys.channel.rawValue] as? String else {
+            , let index = d?[Keys.index.rawValue] as? Int
+            , let channel = d?[Keys.channel.rawValue] as? String
+            , let timestamp = _timestamp else {
                 
             return nil
         }
         
-        let index = d?[Keys.index.rawValue] as? NSNumber
         let author = d?[Keys.author.rawValue] as? String
         let body = d?[Keys.body.rawValue] as? String
-        let timestamp = d?[Keys.timestamp.rawValue] as? String
-            //, let timestampAsDate = d?[Keys.timestampAsDate.rawValue] as? Date
-        let dateUpdated = d?[Keys.dateUpdated.rawValue] as? String
-            //, let dateUpdatedAsDate = d?[Keys.dateUpdatedAsDate.rawValue] as? Date
+        let dateUpdated = (d?[Keys.dateUpdated.rawValue] as? TimeInterval).flatMap { Date(timeIntervalSince1970: $0) }
         let lastUpdatedBy = d?[Keys.lastUpdatedBy.rawValue] as? String
         
-        return TCHStoredMessage(sid: sid, index: index, author: author, body: body, timestamp: timestamp
-//            , timestampAsDate: timestampAsDate
+        return StoredMessage(sid: sid, index: index
+            , author: author, body: body, timestamp: timestamp
             , dateUpdated: dateUpdated
-//            , dateUpdatedAsDate: dateUpdatedAsDate
             , lastUpdatedBy: lastUpdatedBy, channel: channel)
     }
 }
 
-extension TCHStoredMessage: Equatable {
+
+
+extension StoredMessage: Equatable {
     
-    public static func ==(lhs: TCHStoredMessage, rhs: TCHStoredMessage) -> Bool {
+    public static func ==(lhs: StoredMessage, rhs: StoredMessage) -> Bool {
         
         return lhs.sid == rhs.sid && lhs.channel == rhs.channel
     }
 }
 
-extension TCHStoredMessage: Hashable {
+
+
+extension StoredMessage: Hashable {
     
     public var hashValue: Int {
         

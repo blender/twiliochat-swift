@@ -9,92 +9,80 @@
 import Foundation
 
 
-//public protocol ChatChannel {
-//    
-//    var sid: String! { get }
-//    var friendlyName: String! { get }
-//    var uniqueName: String! { get }
-//}
 
-//public protocol ChatChannelWithDelegate: ChatChannel {
-//    
-//    weak var optionalDelegate: TCHChannelDelegate? { get }
-//}
+public protocol ChatChannel {
+    
+    var sid: String { get }
+    var friendlyName: String? { get }
+    var imageUrl: String? { get }
+    var createdBy: String? { get }
+}
 
 
-//extension TCHChannel: ChatChannelWithDelegate {
-//    
-//    public weak var optionalDelegate: TCHChannelDelegate? {
-//        
-//        guard let delegate = self.delegate else { return nil }
-//        
-//        return delegate
-//    }
-//}
 
 extension TCHChannel {
     
-    var storable: TCHStoredChannel {
+    var storable: StoredChannel {
         
-        return TCHStoredChannel(channel: self)
+        // TODO: imageURL from attributes
+        
+        return StoredChannel(sid: self.sid, friendlyName: self.friendlyName, imageUrl: nil, createdBy: self.createdBy)
+    }
+    
+    func store(storeMembers members: MembersHandler?, storeUsers users: UsersHandler?, completion: SuccessHandler?) {
+        
+        self.members.store(inChannel: self, storeMembers: members, storeUsers: users, completion: completion)
     }
 }
 
-//extension TCHChannelDescriptor {
-//    
-//    var storable: TCHStoredChannel {
-//        
-//        return TCHStoredChannel(sid: self.sid
-//            , friendlyName: self.friendlyName
-//            , uniqueName: self.uniqueName)
-//    }
-//}
 
 
-struct TCHStoredChannel/*: ChatChannel*/ {
+struct StoredChannel: ChatChannel {
     
     enum Keys: String {
         
         case sid
         case friendlyName
-        case uniqueName
-        case status
+        case imageUrl
+        case createdBy
     }
     
-    var sid: String!
+    var sid: String
     var friendlyName: String?
-    var uniqueName: String?
-    var status: TCHChannelStatus?
-
-    init(sid: String!, friendlyName: String?, uniqueName: String?, status: TCHChannelStatus?) {
+    var imageUrl: String?
+    var createdBy: String?
+    
+    var channelManager: ChannelManager?
+    
+    init(sid: String, friendlyName: String?, imageUrl: String?, createdBy: String?) {
         
         self.sid = sid
         self.friendlyName = friendlyName
-        self.uniqueName = uniqueName
-        self.status = status
+        self.imageUrl = imageUrl
+        self.createdBy = createdBy
     }
     
-    init(channel: TCHChannel) {
+    init(channel: ChatChannel) {
     
-        self.init(sid: channel.sid, friendlyName: channel.friendlyName, uniqueName: channel.uniqueName, status: channel.status)
+        self.init(sid: channel.sid, friendlyName: channel.friendlyName, imageUrl: channel.imageUrl, createdBy: channel.createdBy)
     }
     
     func toJSON() -> Data {
         
         var dictionary:Dictionary<String, Any> = [:]
         
-        dictionary[Keys.sid.rawValue] = self.sid as String
+        dictionary[Keys.sid.rawValue] = self.sid
         
         self.friendlyName.flatMap { dictionary[Keys.friendlyName.rawValue] = $0 }
-        self.uniqueName.flatMap { dictionary[Keys.uniqueName.rawValue] = $0 }
-        self.status.flatMap { dictionary[Keys.status.rawValue] = $0.rawValue }
+        self.imageUrl.flatMap { dictionary[Keys.imageUrl.rawValue] = $0 }
+        self.createdBy.flatMap { dictionary[Keys.createdBy.rawValue] = $0 }
         
         let d = try? JSONSerialization.data(withJSONObject: dictionary, options: .init(rawValue: 0))
         
         return d!
     }
     
-    static func fromJSON(data: Data) -> TCHStoredChannel? {
+    static func fromJSON(data: Data) -> StoredChannel? {
         
         let d = (try? JSONSerialization.jsonObject(with: data, options: .init(rawValue: 0))) as? Dictionary<String, Any>
         
@@ -104,25 +92,30 @@ struct TCHStoredChannel/*: ChatChannel*/ {
         }
         
         let friendlyName = d?[Keys.friendlyName.rawValue] as? String
-        let uniqueName = d?[Keys.uniqueName.rawValue] as? String
-        let status = TCHChannelStatus(rawValue: (d?[Keys.status.rawValue] as? Int) ?? -1)
+        let imageUrl = d?[Keys.imageUrl.rawValue] as? String
+        let createdBy = d?[Keys.createdBy.rawValue] as? String
         
-        return TCHStoredChannel(sid: sid
+        return StoredChannel(sid: sid
             , friendlyName: friendlyName
-            , uniqueName: uniqueName
-            , status: status)
+            , imageUrl: imageUrl
+            , createdBy: createdBy)
+    }
+    
+    var displayName: String? {
+        
+        return self.friendlyName ?? self.sid
     }
 }
 
-extension TCHStoredChannel: Equatable {
+extension StoredChannel: Equatable {
     
-    public static func ==(lhs: TCHStoredChannel, rhs: TCHStoredChannel) -> Bool {
+    public static func ==(lhs: StoredChannel, rhs: StoredChannel) -> Bool {
         
         return lhs.sid == rhs.sid
     }
 }
 
-extension TCHStoredChannel: Hashable {
+extension StoredChannel: Hashable {
     
     public var hashValue: Int {
         
