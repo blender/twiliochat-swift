@@ -10,6 +10,19 @@ class MainChatViewController: SLKTextViewController {
     
     fileprivate var channel:ActiveChannel?
     
+    lazy var messagingManager: MessagingManager = {
+        
+        var manager = AppDelegate.sharedDelegate.messagingManager
+        manager.delegate = self
+        
+        return manager
+    }()
+    
+    var channelManager: ChannelManager {
+        
+        return self.messagingManager.channelManager
+    }
+    
     var messages:Set<StoredMessage> = Set<StoredMessage>()
     var sortedMessages:[StoredMessage]!
     
@@ -57,14 +70,9 @@ class MainChatViewController: SLKTextViewController {
         tableView!.rowHeight = UITableViewAutomaticDimension
         tableView!.separatorStyle = .none
         
-        var messagingManager = AppDelegate.sharedDelegate.messagingManager
-        messagingManager.delegate = self
-    
         if self.channel == nil {
 
-            let channelManager = messagingManager.channelManager
-            self.messagingManager(messagingManager
-                , choseChannel: channelManager.channels.first)
+            self.chooseChannel(self.channelManager.channels.first)
         }
     }
     
@@ -106,9 +114,7 @@ class MainChatViewController: SLKTextViewController {
         
         chatCell.setUser(user: message.author ?? "[Unknown author]", message: message.body, date: timestamp ?? "[Unknown date]")
         
-        // TODO: advanceLastConsumedMessageIndex as it has been displayed on screen
-        // maybe add a view model to assist UI clients
-        // work on the basis of accessing a dedicated array of messages which imply consumption...
+        self.channel?.advanceLastConsumedMessageIndex(indexPath.row)
         
         return chatCell
     }
@@ -191,13 +197,30 @@ class MainChatViewController: SLKTextViewController {
     @IBAction func revealButtonTouched(_ sender: AnyObject) {
         revealViewController().revealToggle(animated: true)
     }
+    
+    func chooseChannel(_ channel: StoredChannel?) {
+        
+        guard self.channel?.sid != channel?.sid else {
+            
+            return
+        }
+        
+        guard let chosenChannel = channel else {
+            
+            self.channel = nil
+            self.clearMessages()
+            return
+        }
+        
+        self.activateChannel(chosenChannel, inManager: self.channelManager)
+    }
 }
 
 
 
 extension MainChatViewController: MessagingDelegate {
     
-    private func activateChannel(_ channel: StoredChannel, inManager manager: ChannelManager) {
+    fileprivate func activateChannel(_ channel: StoredChannel, inManager manager: ChannelManager) {
     
         manager.activateChannel(channel) { [weak self] activeChannel in
             
@@ -236,23 +259,6 @@ extension MainChatViewController: MessagingDelegate {
         guard self.channel?.sid == channel.sid else { return }
         
         self.activateChannel(channel, inManager: manager.channelManager)
-    }
-    
-    func messagingManager(_ manager: MessagingManager, choseChannel channel: StoredChannel?) {
-    
-        guard self.channel?.sid != channel?.sid else {
-            
-            return
-        }
-        
-        guard let chosenChannel = channel else {
-            
-            self.channel = nil
-            self.clearMessages()
-            return
-        }
-        
-        self.activateChannel(chosenChannel, inManager: manager.channelManager)
     }
     
     func channelManager(_: ChannelManager, deletedChannel: StoredChannel) {

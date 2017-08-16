@@ -1,4 +1,7 @@
 import UIKit
+import TwilioChatClient
+import TwilioAccessManager
+
 
 
 
@@ -7,8 +10,6 @@ protocol MessagingDelegate : ChannelDelegate {
     func messagingManager(_: MessagingManager, addedMessage: StoredMessage, toChannel: StoredChannel)
     func messagingManager(_: MessagingManager, deletedMessage: StoredMessage, fromChannel: StoredChannel)
     func messagingManager(_: MessagingManager, updatedMessage: StoredMessage, inChannel: StoredChannel)
-    
-    func messagingManager(_: MessagingManager, choseChannel: StoredChannel?)
 }
 
 
@@ -34,6 +35,7 @@ protocol MessagingManager {
     
     func sendMessage(_: String, inChannel: ChatChannel)
     func removeMessage(atIndex: Int, fromChannel: ChatChannel)
+    func advanceLastConsumedMessageIndex(_ index: Int, forChannel: ChatChannel)
     
     func activateChannel(_: ChatChannel, completion: @escaping ActiveChannelHandler)
 }
@@ -111,6 +113,11 @@ extension TCHMessagingManager: MessagingManager {
     func removeMessage(atIndex index: Int, fromChannel channel: ChatChannel) {
         
         self.client.removeMessage(atIndex: index, fromChannel: channel)
+    }
+    
+    func advanceLastConsumedMessageIndex(_ index: Int, forChannel channel: ChatChannel) {
+        
+        self.client.advanceLastConsumedMessageIndex(index, forChannel: channel)
     }
     
     func activateChannel(_ channel: ChatChannel, completion: @escaping ActiveChannelHandler) {
@@ -195,7 +202,7 @@ class TCHMessagingManager: NSObject {
     var delegate: MessagingDelegate?
 
     fileprivate var startup: StartupHandler?
-    fileprivate var client: ChatClient!
+    fileprivate var client: TwilioOfflineChatClient!
     fileprivate var reachability: Reachability!
     fileprivate var isReachable: Bool!
     fileprivate var requestTokenWithCompletionActive = false
@@ -301,7 +308,7 @@ class TCHMessagingManager: NSObject {
         
         UIApplication.shared.isNetworkActivityIndicatorVisible = true
         
-        ChatClient.chatClient(withToken: token, properties: nil, delegate: self, chatStore: UserDefaultChatStore.shared) { [weak self] result, chatClient in
+        TwilioOfflineChatClient.chatClient(withToken: token, properties: nil, delegate: self, chatStore: UserDefaultChatStore.shared) { [weak self] result, chatClient in
             
             guard result == true else { return }
             
@@ -337,36 +344,33 @@ class TCHMessagingManager: NSObject {
 
 extension TCHMessagingManager : ChatClientDelegate {
     
-    func chatClient(_ client: ChatClient, channelAdded channel: TCHChannel) {
+    func chatClient(_ client: TwilioOfflineChatClient, channelAdded channel: TCHChannel) {
         
         let storeableChannel = channel.storable
         
-        //self.chatStore.addChannel(storeableChannel)
         self.channelManager.addChannel(storeableChannel)
         self.delegate?.channelManager(self.channelManager, addedChannel: storeableChannel)
     }
     
-    func chatClient(_ client: ChatClient, channel: TCHChannel, synchronizationStatusUpdated status: TCHChannelSynchronizationStatus) {
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, synchronizationStatusUpdated status: TCHChannelSynchronizationStatus) {
 
         guard status == .all else { return }
         
         let storeableChannel = channel.storable
         
-        //self.chatStore.updateChannel(storeableChannel)
         self.channelManager.updateChannel(storeableChannel)
         self.delegate?.channelManager(self.channelManager, updatedChannel: storeableChannel)
     }
     
-    func chatClient(_ client: ChatClient, channelDeleted channel: TCHChannel) {
+    func chatClient(_ client: TwilioOfflineChatClient, channelDeleted channel: TCHChannel) {
         
         let storeableChannel = channel.storable
         
-        //self.chatStore.deleteChannel(storeableChannel)
         self.channelManager.deleteChannel(storeableChannel)
         self.delegate?.channelManager(self.channelManager, deletedChannel: storeableChannel)
     }
     
-    func chatClient(_ client: ChatClient, synchronizationStatusUpdated status: TCHClientSynchronizationStatus) {
+    func chatClient(_ client: TwilioOfflineChatClient, synchronizationStatusUpdated status: TCHClientSynchronizationStatus) {
         
         if status == TCHClientSynchronizationStatus.completed {
 
@@ -379,7 +383,7 @@ extension TCHMessagingManager : ChatClientDelegate {
         }
     }
     
-    func chatClient(_ client: ChatClient, channel: TCHChannel, messageAdded message: TCHMessage) {
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, messageAdded message: TCHMessage) {
 
         let storeableMessage = message.storable(forChannel: channel)
         let storeableChannel = channel.storable
@@ -387,7 +391,7 @@ extension TCHMessagingManager : ChatClientDelegate {
         self.delegate?.messagingManager(self, addedMessage: storeableMessage, toChannel: storeableChannel)
     }
     
-    func chatClient(_ client: ChatClient, channel: TCHChannel, message: TCHMessage, updated: TCHMessageUpdate) {
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, message: TCHMessage, updated: TCHMessageUpdate) {
         
         let storeableMessage = message.storable(forChannel: channel)
         let storeableChannel = channel.storable
@@ -395,7 +399,7 @@ extension TCHMessagingManager : ChatClientDelegate {
         self.delegate?.messagingManager(self, updatedMessage: storeableMessage, inChannel: storeableChannel)
     }
     
-    func chatClient(_ client: ChatClient, channel: TCHChannel, messageDeleted message: TCHMessage) {
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, messageDeleted message: TCHMessage) {
 
         let storeableMessage = message.storable(forChannel: channel)
         let storeableChannel = channel.storable

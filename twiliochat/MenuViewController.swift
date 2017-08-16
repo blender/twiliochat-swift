@@ -116,7 +116,7 @@ class MenuViewController: UIViewController {
             }
             
             self.messagingManager.delegate = nil
-            mainChatViewController.messagingManager(self.messagingManager, choseChannel: channel)
+            mainChatViewController.chooseChannel(channel)
         }
     }
     

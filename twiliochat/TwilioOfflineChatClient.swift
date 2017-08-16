@@ -1,5 +1,5 @@
 //
-//  ChatClient.swift
+//  TwilioOfflineChatClient.swift
 //  twiliochat
 //
 //  Created by Tommaso Piazza on 24.07.17.
@@ -18,7 +18,7 @@ protocol ChatClientDelegate: class {
      @param client The chat client.
      @param state The current connection state of the client.
      */
-    func chatClient(_ client: ChatClient, connectionStateUpdated state: TCHClientConnectionState)
+    func chatClient(_ client: TwilioOfflineChatClient, connectionStateUpdated state: TCHClientConnectionState)
     
     
     /** Called when the client synchronization state changes during startup.
@@ -26,7 +26,7 @@ protocol ChatClientDelegate: class {
      @param client The chat client.
      @param status The current synchronization status of the client.
      */
-    func chatClient(_ client: ChatClient, synchronizationStatusUpdated status: TCHClientSynchronizationStatus)
+    func chatClient(_ client: TwilioOfflineChatClient, synchronizationStatusUpdated status: TCHClientSynchronizationStatus)
     
     
     /** Called when the current user has a channel added to their channel list.
@@ -34,7 +34,7 @@ protocol ChatClientDelegate: class {
      @param client The chat client.
      @param channel The channel.
      */
-    func chatClient(_ client: ChatClient, channelAdded channel: TCHChannel)
+    func chatClient(_ client: TwilioOfflineChatClient, channelAdded channel: TCHChannel)
     
     
     /** Called when one of the current users channels is changed.
@@ -43,7 +43,7 @@ protocol ChatClientDelegate: class {
      @param channel The channel.
      @param updated An indication of what changed on the channel.
      */
-    func chatClient(_ client: ChatClient, channel: TCHChannel, updated: TCHChannelUpdate)
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, updated: TCHChannelUpdate)
     
     
     /** Called when a channel the current the client is aware of changes synchronization state.
@@ -52,7 +52,7 @@ protocol ChatClientDelegate: class {
      @param channel The channel.
      @param status The current synchronization status of the channel.
      */
-    func chatClient(_ client: ChatClient, channel: TCHChannel, synchronizationStatusUpdated status: TCHChannelSynchronizationStatus)
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, synchronizationStatusUpdated status: TCHChannelSynchronizationStatus)
     
     
     /** Called when one of the current users channels is deleted.
@@ -60,7 +60,7 @@ protocol ChatClientDelegate: class {
      @param client The chat client.
      @param channel The channel.
      */
-    func chatClient(_ client: ChatClient, channelDeleted channel: TCHChannel)
+    func chatClient(_ client: TwilioOfflineChatClient, channelDeleted channel: TCHChannel)
     
     
     /** Called when a channel the current user is subscribed to has a new member join.
@@ -69,7 +69,7 @@ protocol ChatClientDelegate: class {
      @param channel The channel.
      @param member The member.
      */
-    func chatClient(_ client: ChatClient, channel: TCHChannel, memberJoined member: TCHMember)
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, memberJoined member: TCHMember)
     
     
     /** Called when a channel the current user is subscribed to has a member modified.
@@ -79,7 +79,7 @@ protocol ChatClientDelegate: class {
      @param member The member.
      @param updated An indication of what changed on the member.
      */
-    func chatClient(_ client: ChatClient, channel: TCHChannel, member: TCHMember, updated: TCHMemberUpdate)
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, member: TCHMember, updated: TCHMemberUpdate)
     
     
     /** Called when a channel the current user is subscribed to has a member leave.
@@ -88,7 +88,7 @@ protocol ChatClientDelegate: class {
      @param channel The channel.
      @param member The member.
      */
-    func chatClient(_ client: ChatClient, channel: TCHChannel, memberLeft member: TCHMember)
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, memberLeft member: TCHMember)
     
     
     /** Called when a channel the current user is subscribed to receives a new message.
@@ -97,7 +97,7 @@ protocol ChatClientDelegate: class {
      @param channel The channel.
      @param message The message.
      */
-    func chatClient(_ client: ChatClient, channel: TCHChannel, messageAdded message: TCHMessage)
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, messageAdded message: TCHMessage)
     
     
     /** Called when a message on a channel the current user is subscribed to is modified.
@@ -107,7 +107,7 @@ protocol ChatClientDelegate: class {
      @param message The message.
      @param updated An indication of what changed on the message.
      */
-    func chatClient(_ client: ChatClient, channel: TCHChannel, message: TCHMessage, updated: TCHMessageUpdate)
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, message: TCHMessage, updated: TCHMessageUpdate)
     
     
     /** Called when a message on a channel the current user is subscribed to is deleted.
@@ -116,7 +116,7 @@ protocol ChatClientDelegate: class {
      @param channel The channel.
      @param message The message.
      */
-    func chatClient(_ client: ChatClient, channel: TCHChannel, messageDeleted message: TCHMessage)
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, messageDeleted message: TCHMessage)
     
     
     /** Called when an error occurs.
@@ -124,7 +124,7 @@ protocol ChatClientDelegate: class {
      @param client The chat client.
      @param error The error.
      */
-    func chatClient(_ client: ChatClient, errorReceived error: TCHError)
+    func chatClient(_ client: TwilioOfflineChatClient, errorReceived error: TCHError)
     
     
     /** Called when a member of a channel starts typing.
@@ -133,7 +133,7 @@ protocol ChatClientDelegate: class {
      @param channel The channel.
      @param member The member.
      */
-    func chatClient(_ client: ChatClient, typingStartedOn channel: TCHChannel, member: TCHMember)
+    func chatClient(_ client: TwilioOfflineChatClient, typingStartedOn channel: TCHChannel, member: TCHMember)
     
     
     /** Called when a member of a channel ends typing.
@@ -142,7 +142,7 @@ protocol ChatClientDelegate: class {
      @param channel The channel.
      @param member The member.
      */
-    func chatClient(_ client: ChatClient, typingEndedOn channel: TCHChannel, member: TCHMember)
+    func chatClient(_ client: TwilioOfflineChatClient, typingEndedOn channel: TCHChannel, member: TCHMember)
     
     
     /** Called as a result of TwilioChatClient's handleNotification: method being invoked.  `handleNotification:` parses the push payload and extracts the channel and message for the push notification then calls this delegate method.
@@ -151,7 +151,7 @@ protocol ChatClientDelegate: class {
      @param channelSid The channel sid for the push notification.
      @param messageIndex The index of the new message.
      */
-    func chatClient(_ client: ChatClient, notificationNewMessageReceivedForChannelSid channelSid: String, messageIndex: UInt)
+    func chatClient(_ client: TwilioOfflineChatClient, notificationNewMessageReceivedForChannelSid channelSid: String, messageIndex: UInt)
     
     
     /** Called when a processed push notification has changed the application's badge count.  You should call:
@@ -163,7 +163,7 @@ protocol ChatClientDelegate: class {
      @param client The chat client.
      @param badgeCount The updated badge count.
      */
-    func chatClient(_ client: ChatClient, notificationUpdatedBadgeCount badgeCount: UInt)
+    func chatClient(_ client: TwilioOfflineChatClient, notificationUpdatedBadgeCount badgeCount: UInt)
     
     
     /** Called when the current user's or that of any subscribed channel member's user is updated.
@@ -172,7 +172,7 @@ protocol ChatClientDelegate: class {
      @param user The object for changed user.
      @param updated An indication of what changed on the user.
      */
-    func chatClient(_ client: ChatClient, user: TCHUser, updated: TCHUserUpdate)
+    func chatClient(_ client: TwilioOfflineChatClient, user: TCHUser, updated: TCHUserUpdate)
     
     
     /** Called when the client subscribes to updates for a given user.
@@ -180,7 +180,7 @@ protocol ChatClientDelegate: class {
      @param client The chat client.
      @param user The object for subscribed user.
      */
-    func chatClient(_ client: ChatClient, userSubscribed user: TCHUser)
+    func chatClient(_ client: TwilioOfflineChatClient, userSubscribed user: TCHUser)
     
     
     /** Called when the client unsubscribes from updates for a given user.
@@ -188,46 +188,46 @@ protocol ChatClientDelegate: class {
      @param client The chat client.
      @param user The object for unsubscribed user.
      */
-    func chatClient(_ client: ChatClient, userUnsubscribed user: TCHUser)
+    func chatClient(_ client: TwilioOfflineChatClient, userUnsubscribed user: TCHUser)
 }
 
 
 
 extension ChatClientDelegate {
     
-    func chatClient(_ client: ChatClient, connectionStateUpdated state: TCHClientConnectionState) {}
-    func chatClient(_ client: ChatClient, synchronizationStatusUpdated status: TCHClientSynchronizationStatus) {}
-    func chatClient(_ client: ChatClient, channelAdded channel: TCHChannel) {}
-    func chatClient(_ client: ChatClient, channelDeleted channel: TCHChannel) {}
-    func chatClient(_ client: ChatClient, channel: TCHChannel, updated: TCHChannelUpdate) {}
-    func chatClient(_ client: ChatClient, channel: TCHChannel, synchronizationStatusUpdated status: TCHChannelSynchronizationStatus) {}
-    func chatClient(_ client: ChatClient, channelDeleted channel: TCHChannel!) {}
-    func chatClient(_ client: ChatClient, channel: TCHChannel, memberJoined member: TCHMember) {}
-    func chatClient(_ client: ChatClient, channel: TCHChannel, member: TCHMember, updated: TCHMemberUpdate) {}
-    func chatClient(_ client: ChatClient, channel: TCHChannel, memberLeft member: TCHMember) {}
-    func chatClient(_ client: ChatClient, channel: TCHChannel, messageAdded message: TCHMessage) {}
-    func chatClient(_ client: ChatClient, channel: TCHChannel, message: TCHMessage, updated: TCHMessageUpdate) {}
-    func chatClient(_ client: ChatClient, channel: TCHChannel, messageDeleted message: TCHMessage) {}
-    func chatClient(_ client: ChatClient, errorReceived error: TCHError) {}
-    func chatClient(_ client: ChatClient, typingStartedOn channel: TCHChannel, member: TCHMember) {}
-    func chatClient(_ client: ChatClient, typingEndedOn channel: TCHChannel, member: TCHMember) {}
-    func chatClient(_ client: ChatClient, notificationNewMessageReceivedForChannelSid channelSid: String, messageIndex: UInt) {}
-    func chatClient(_ client: ChatClient, notificationUpdatedBadgeCount badgeCount: UInt) {}
-    func chatClient(_ client: ChatClient, user: TCHUser, updated: TCHUserUpdate) {}
-    func chatClient(_ client: ChatClient, userSubscribed user: TCHUser) {}
-    func chatClient(_ client: ChatClient, userUnsubscribed user: TCHUser) {}
+    func chatClient(_ client: TwilioOfflineChatClient, connectionStateUpdated state: TCHClientConnectionState) {}
+    func chatClient(_ client: TwilioOfflineChatClient, synchronizationStatusUpdated status: TCHClientSynchronizationStatus) {}
+    func chatClient(_ client: TwilioOfflineChatClient, channelAdded channel: TCHChannel) {}
+    func chatClient(_ client: TwilioOfflineChatClient, channelDeleted channel: TCHChannel) {}
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, updated: TCHChannelUpdate) {}
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, synchronizationStatusUpdated status: TCHChannelSynchronizationStatus) {}
+    func chatClient(_ client: TwilioOfflineChatClient, channelDeleted channel: TCHChannel!) {}
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, memberJoined member: TCHMember) {}
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, member: TCHMember, updated: TCHMemberUpdate) {}
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, memberLeft member: TCHMember) {}
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, messageAdded message: TCHMessage) {}
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, message: TCHMessage, updated: TCHMessageUpdate) {}
+    func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, messageDeleted message: TCHMessage) {}
+    func chatClient(_ client: TwilioOfflineChatClient, errorReceived error: TCHError) {}
+    func chatClient(_ client: TwilioOfflineChatClient, typingStartedOn channel: TCHChannel, member: TCHMember) {}
+    func chatClient(_ client: TwilioOfflineChatClient, typingEndedOn channel: TCHChannel, member: TCHMember) {}
+    func chatClient(_ client: TwilioOfflineChatClient, notificationNewMessageReceivedForChannelSid channelSid: String, messageIndex: UInt) {}
+    func chatClient(_ client: TwilioOfflineChatClient, notificationUpdatedBadgeCount badgeCount: UInt) {}
+    func chatClient(_ client: TwilioOfflineChatClient, user: TCHUser, updated: TCHUserUpdate) {}
+    func chatClient(_ client: TwilioOfflineChatClient, userSubscribed user: TCHUser) {}
+    func chatClient(_ client: TwilioOfflineChatClient, userUnsubscribed user: TCHUser) {}
 }
 
 
 
-public class ChatClient: NSObject {
+public class TwilioOfflineChatClient: NSObject {
     
     private var twilioChatClient: TwilioChatClient?
     
     weak var delegate: ChatClientDelegate?
     weak var chatStore: ChatStore?
     
-    typealias ChatClientCompletion = (Bool, ChatClient?) -> ()
+    typealias ChatClientCompletion = (Bool, TwilioOfflineChatClient?) -> ()
     
     var user: StoredUser? {
         
@@ -245,7 +245,7 @@ public class ChatClient: NSObject {
         , chatStore: ChatStore?
         , completion: @escaping ChatClientCompletion) {
         
-        let chatClient = ChatClient()
+        let chatClient = TwilioOfflineChatClient()
         chatClient.delegate = delegate
         chatClient.chatStore = chatStore
         
@@ -312,11 +312,19 @@ public class ChatClient: NSObject {
             }
         }
     }
+    
+    func advanceLastConsumedMessageIndex(_ index: Int, forChannel chatChannel: ChatChannel) {
+        
+        self.twilioChatClient?.channelsList().channel(withSidOrUniqueName: chatChannel.sid) { (result, channel) in
+            
+            channel?.messages.advanceLastConsumedMessageIndex(NSNumber(value: index))
+        }
+    }
 }
 
 
 
-extension ChatClient: TwilioChatClientDelegate {
+extension TwilioOfflineChatClient: TwilioChatClientDelegate {
     
     /** Called when the client connection state changes.
      
@@ -385,6 +393,7 @@ extension ChatClient: TwilioChatClientDelegate {
      */
     public func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, updated: TCHChannelUpdate) {
         
+        self.chatStore?.updateChannel(channel.storable)
         self.delegate?.chatClient(self, channel: channel, updated: updated)
     }
     
@@ -426,6 +435,7 @@ extension ChatClient: TwilioChatClientDelegate {
      */
     public func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, memberJoined member: TCHMember!) {
         
+        self.chatStore?.addMember(member.storable(forChannel: channel), toChannel: channel.storable)
         self.delegate?.chatClient(self, channel: channel, memberJoined: member)
     }
     
@@ -439,6 +449,7 @@ extension ChatClient: TwilioChatClientDelegate {
      */
     public func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, member: TCHMember!, updated: TCHMemberUpdate) {
         
+        self.chatStore?.updateMember(member.storable(forChannel: channel), inChannel: channel.storable)
         self.delegate?.chatClient(self, channel: channel, member: member, updated: updated)
     }
     
@@ -451,6 +462,7 @@ extension ChatClient: TwilioChatClientDelegate {
      */
     public func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, memberLeft member: TCHMember!) {
         
+        self.chatStore?.deleteMember(member.storable(forChannel: channel), fromChannel: channel.storable)
         self.delegate?.chatClient(self, channel: channel, memberLeft: member)
     }
     
@@ -477,7 +489,7 @@ extension ChatClient: TwilioChatClientDelegate {
      */
     public func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, message: TCHMessage!, updated: TCHMessageUpdate) {
         
-        // TODO
+        self.chatStore?.updateMessage(message.storable(forChannel: channel), inChannel: channel.storable)
         self.delegate?.chatClient(self, channel: channel, message: message, updated: updated)
     }
     
@@ -565,6 +577,7 @@ extension ChatClient: TwilioChatClientDelegate {
      */
     public func chatClient(_ client: TwilioChatClient!, user: TCHUser!, updated: TCHUserUpdate) {
         
+        self.chatStore?.updateUser(user.storable)
         self.delegate?.chatClient(self, user: user, updated: updated)
     }
     
@@ -576,6 +589,7 @@ extension ChatClient: TwilioChatClientDelegate {
      */
     public func chatClient(_ client: TwilioChatClient!, userSubscribed user: TCHUser!) {
         
+        self.chatStore?.addUser(user.storable)
         self.delegate?.chatClient(self, userSubscribed: user)
     }
     
@@ -587,6 +601,7 @@ extension ChatClient: TwilioChatClientDelegate {
      */
     public func chatClient(_ client: TwilioChatClient!, userUnsubscribed user: TCHUser!) {
         
+        self.chatStore?.deleteUser(user.storable)
         self.delegate?.chatClient(self, userUnsubscribed: user)
     }
 }

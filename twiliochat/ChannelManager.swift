@@ -36,6 +36,7 @@ protocol ChannelManager {
     
     func sendMessage(_: String, inChannel: ChatChannel)
     func removeMessage(atIndex: Int, fromChannel: ChatChannel)
+    func advanceLastConsumedMessageIndex(_ index: Int, forChannel: ChatChannel)
     
     func activateChannel(_: ChatChannel, completion: @escaping ActiveChannelHandler)
 }
@@ -108,6 +109,11 @@ class SharecareChannelManager: ChannelManager {
     func removeMessage(atIndex index: Int, fromChannel channel: ChatChannel) {
 
         self.messagingManager.removeMessage(atIndex: index, fromChannel: channel)
+    }
+    
+    func advanceLastConsumedMessageIndex(_ index: Int, forChannel channel: ChatChannel) {
+        
+        self.messagingManager.advanceLastConsumedMessageIndex(index, forChannel: channel)
     }
     
     func activateChannel(_ channel: ChatChannel, completion: @escaping ActiveChannelHandler) {

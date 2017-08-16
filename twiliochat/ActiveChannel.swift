@@ -16,6 +16,7 @@ protocol ActiveChatChannel : ChatChannel {
     
     func sendMessage(_: String)
     func removeMessage(atIndex: Int)
+    func advanceLastConsumedMessageIndex(_ index: Int)
 }
 
 
@@ -30,6 +31,11 @@ extension ActiveChatChannel {
     func removeMessage(atIndex index: Int) {
         
         self.manager?.removeMessage(atIndex: index, fromChannel: self)
+    }
+    
+    func advanceLastConsumedMessageIndex(_ index: Int) {
+        
+        self.manager?.advanceLastConsumedMessageIndex(index, forChannel: self)
     }
 }
 

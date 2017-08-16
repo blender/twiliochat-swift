@@ -34,7 +34,7 @@
 		87F895F61C0E044300754007 /* MenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F895F51C0E044300754007 /* MenuViewController.swift */; };
 		87F895F81C0E045F00754007 /* MainChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F895F71C0E045F00754007 /* MainChatViewController.swift */; };
 		8A07B2CB1F224CAD009F0836 /* MockMessagingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A07B2CA1F224CAD009F0836 /* MockMessagingManager.swift */; };
-		C8B6599E1F3AF5DA00AA0AC0 /* ChatClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8B6599D1F3AF5DA00AA0AC0 /* ChatClient.swift */; };
+		C8B6599E1F3AF5DA00AA0AC0 /* TwilioOfflineChatClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8B6599D1F3AF5DA00AA0AC0 /* TwilioOfflineChatClient.swift */; };
 		C8B659A21F3B0EB700AA0AC0 /* TCHChannels+Storable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8B659A11F3B0EB700AA0AC0 /* TCHChannels+Storable.swift */; };
 		C8B659A31F3B133200AA0AC0 /* ActiveChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CEF4291F32261900F59FA6 /* ActiveChannel.swift */; };
 		C8CEF41E1F30C3FB00F59FA6 /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CEF41D1F30C3FB00F59FA6 /* Reachability.swift */; };
@@ -95,7 +95,7 @@
 		8A07B2CA1F224CAD009F0836 /* MockMessagingManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockMessagingManager.swift; sourceTree = "<group>"; };
 		9CD950001C6E991D2EC43869 /* Pods-twiliochat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-twiliochat.debug.xcconfig"; path = "Pods/Target Support Files/Pods-twiliochat/Pods-twiliochat.debug.xcconfig"; sourceTree = "<group>"; };
 		A632A40A820E0010EABFCF87 /* Pods_twiliochatUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_twiliochatUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		C8B6599D1F3AF5DA00AA0AC0 /* ChatClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatClient.swift; sourceTree = "<group>"; };
+		C8B6599D1F3AF5DA00AA0AC0 /* TwilioOfflineChatClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TwilioOfflineChatClient.swift; sourceTree = "<group>"; };
 		C8B659A11F3B0EB700AA0AC0 /* TCHChannels+Storable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "TCHChannels+Storable.swift"; sourceTree = "<group>"; };
 		C8CEF41D1F30C3FB00F59FA6 /* Reachability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
 		C8CEF41F1F31B92700F59FA6 /* ChatStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
@@ -291,7 +291,7 @@
 			isa = PBXGroup;
 			children = (
 				C8CEF4291F32261900F59FA6 /* ActiveChannel.swift */,
-				C8B6599D1F3AF5DA00AA0AC0 /* ChatClient.swift */,
+				C8B6599D1F3AF5DA00AA0AC0 /* TwilioOfflineChatClient.swift */,
 				C8CEF41F1F31B92700F59FA6 /* ChatStore.swift */,
 				C8CEF4231F31BD5400F59FA6 /* TCHChannel+Storable.swift */,
 				C8B659A11F3B0EB700AA0AC0 /* TCHChannels+Storable.swift */,
@@ -510,7 +510,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C8B6599E1F3AF5DA00AA0AC0 /* ChatClient.swift in Sources */,
+				C8B6599E1F3AF5DA00AA0AC0 /* TwilioOfflineChatClient.swift in Sources */,
 				C8E03D4B1F41910C00544EFE /* TCHUser+Storable.swift in Sources */,
 				877109151C10EF4F004C57D3 /* ChannelManager.swift in Sources */,
 				87F895F81C0E045F00754007 /* MainChatViewController.swift in Sources */,
