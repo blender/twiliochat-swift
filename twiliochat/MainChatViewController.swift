@@ -136,7 +136,12 @@ class MainChatViewController: SLKTextViewController {
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle
         , forRowAt indexPath: IndexPath) {
         
-        self.channel?.removeMessage(atIndex: indexPath.row)
+        guard let messageIndex = self.channel?.messages[indexPath.row].index else {
+            
+            return
+        }
+        
+        self.channel?.removeMessage(atIndex: messageIndex)
     }
     
     // Disable user input and show activity indicator

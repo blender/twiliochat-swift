@@ -70,7 +70,7 @@ class ActiveChannel : ActiveChatChannel {
         self.channel = storedChannel
         self.users = Set(storedUsers)
         self.members = Set(storedMembers)
-        self.messages = storedMessages
+        self.messages = storedMessages.sorted { $0.index < $1.index }
         
         self.creator = self.members.first { $0.identity == self.createdBy }
         self.others = self.members.filter { $0.identity != self.createdBy }
@@ -103,10 +103,14 @@ class ActiveChannel : ActiveChatChannel {
     
     func getUnreadMessageCountForMember(_ member: ChatMember) -> Int {
         
-        guard let lastMessageIndex = self.messages.last?.index
-            , let lastConsumedMessageIndex = member.lastConsumedMessageIndex else {
+        guard let lastMessageIndex = self.messages.last?.index else {
             
-            return -1
+            return 0
+        }
+        
+        guard let lastConsumedMessageIndex = member.lastConsumedMessageIndex else {
+            
+            return lastMessageIndex
         }
         
         return lastMessageIndex - lastConsumedMessageIndex
