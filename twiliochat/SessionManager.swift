@@ -5,7 +5,7 @@ class SessionManager {
     static let IsLoggedInKey: String = "loggedIn"
     static let defaults = UserDefaults.standard
     
-    class func loginWithUsername(username:String) {
+    class func loginWithUsername(username: String) {
         defaults.set(username, forKey: UsernameKey)
         defaults.set(true, forKey: IsLoggedInKey)
         
@@ -20,7 +20,7 @@ class SessionManager {
     
     class func isLoggedIn() -> Bool {
         let isLoggedIn = defaults.bool(forKey: IsLoggedInKey)
-        if (isLoggedIn) {
+        if isLoggedIn {
             return true
         }
         return false

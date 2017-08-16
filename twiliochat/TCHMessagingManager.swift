@@ -402,7 +402,7 @@ extension TCHMessagingManager: TwilioAccessManagerDelegate {
     public func accessManagerTokenWillExpire(_ accessManager: TwilioAccessManager) {
         
         requestTokenWithCompletion { succeeded, token in
-            if (succeeded) {
+            if succeeded {
                 accessManager.updateToken(token!)
             }
             else {

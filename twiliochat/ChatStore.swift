@@ -67,7 +67,7 @@ protocol ChatStore: class {
     func deleteChannel(_ channel: StoredChannel)
     
     func storeMessages(forChannel channel: StoredChannel, messages: [StoredMessage])
-    func storedMessages(forChannel channel:StoredChannel, completion: ([StoredMessage]) -> ())
+    func storedMessages(forChannel channel: StoredChannel, completion: ([StoredMessage]) -> ())
     func addMessage(_ message: StoredMessage, toChannel  channel: StoredChannel)
     func updateMessage(_ message: StoredMessage, inChannel  channel: StoredChannel)
     func deleteMessage(_ message: StoredMessage, fromChannel  channel: StoredChannel)
