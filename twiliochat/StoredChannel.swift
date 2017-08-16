@@ -40,7 +40,7 @@ struct StoredChannel: ChatChannel {
     
     func toJSON() -> Data {
         
-        var dictionary:Dictionary<String, Any> = [:]
+        var dictionary: Dictionary<String, Any> = [:]
         
         dictionary[Keys.sid.rawValue] = self.sid
         

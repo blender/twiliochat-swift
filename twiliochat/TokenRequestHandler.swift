@@ -2,7 +2,7 @@ import UIKit
 
 class TokenRequestHandler {
     
-    class func postDataFrom(params:[String:String]) -> String {
+    class func postDataFrom(params: [String: String]) -> String {
         var data = ""
         
         for (key, value) in params {
@@ -18,7 +18,7 @@ class TokenRequestHandler {
         return data
     }
     
-    class func fetchToken(params:[String:String], completion:@escaping (NSDictionary, NSError?) -> Void) {
+    class func fetchToken(params: [String: String], completion:@escaping (NSDictionary, NSError?) -> Void) {
         if let filePath = Bundle.main.path(forResource: "Keys", ofType:"plist"),
             let dictionary = NSDictionary(contentsOfFile:filePath) as? [String: AnyObject],
             let tokenRequestUrl = dictionary["TokenRequestUrl"] as? String {

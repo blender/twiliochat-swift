@@ -8,11 +8,11 @@
 
 
 
-protocol MessagingDelegate : ChannelDelegate {
+protocol MessagingDelegate: ChannelDelegate {
     
-    func messagingManager(_: MessagingManager, addedMessage: StoredMessage, toChannel: StoredChannel)
-    func messagingManager(_: MessagingManager, deletedMessage: StoredMessage, fromChannel: StoredChannel)
-    func messagingManager(_: MessagingManager, updatedMessage: StoredMessage, inChannel: StoredChannel)
+    func messagingManager(_ messagingManager: MessagingManager, addedMessage: StoredMessage, toChannel: StoredChannel)
+    func messagingManager(_ messagingManager: MessagingManager, deletedMessage: StoredMessage, fromChannel: StoredChannel)
+    func messagingManager(_ messagingManager: MessagingManager, updatedMessage: StoredMessage, inChannel: StoredChannel)
 }
 
 
@@ -26,7 +26,7 @@ protocol MessagingManager {
     static func sharedManager() -> MessagingManager
     
     var channelManager: ChannelManager { get }
-    var delegate: MessagingDelegate? { get set }
+    weak var delegate: MessagingDelegate? { get set }
     
     var user: StoredUser? { get }
     

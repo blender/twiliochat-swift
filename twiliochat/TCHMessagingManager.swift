@@ -30,7 +30,7 @@ class TCHMessagingManager: NSObject {
         return manager
     }()
     
-    var delegate: MessagingDelegate?
+    weak var delegate: MessagingDelegate?
     
     fileprivate var startup: StartupHandler?
     fileprivate var client: TwilioOfflineChatClient!
@@ -166,7 +166,7 @@ class TCHMessagingManager: NSObject {
     
     func errorWithDescription(description: String, code: Int) -> NSError {
         
-        let userInfo = [NSLocalizedDescriptionKey : description]
+        let userInfo = [NSLocalizedDescriptionKey: description]
         return NSError(domain: "app", code: code, userInfo: userInfo)
     }
 }
@@ -311,7 +311,7 @@ extension TCHMessagingManager: MessagingManager {
 
 
 
-extension TCHMessagingManager : ChatClientDelegate {
+extension TCHMessagingManager: ChatClientDelegate {
     
     func chatClient(_ client: TwilioOfflineChatClient, channelAdded channel: TCHChannel) {
         
@@ -397,7 +397,7 @@ extension TCHMessagingManager : ChatClientDelegate {
 
 
 
-extension TCHMessagingManager : TwilioAccessManagerDelegate {
+extension TCHMessagingManager: TwilioAccessManagerDelegate {
     
     public func accessManagerTokenWillExpire(_ accessManager: TwilioAccessManager) {
         

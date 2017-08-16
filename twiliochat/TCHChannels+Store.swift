@@ -1,5 +1,5 @@
 //
-//  TCHChannels+Storable.swift
+//  TCHChannels+Store.swift
 //  twiliochat
 //
 //  Created by Robert Norris on 09.08.17.

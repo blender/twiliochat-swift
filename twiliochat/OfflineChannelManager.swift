@@ -11,7 +11,7 @@
 class OfflineChannelManager: ChannelManager {
 
     private var messagingManager: MessagingManager
-    var delegate: ChannelDelegate?
+    weak var delegate: ChannelDelegate?
     
     private var channelsCollection = Set<StoredChannel>()
     private(set) var channels: [StoredChannel] = []

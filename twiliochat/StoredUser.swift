@@ -36,7 +36,7 @@ struct StoredUser: ChatUser {
     
     func toJSON() -> Data {
         
-        var dictionary:Dictionary<String, Any> = [:]
+        var dictionary: Dictionary<String, Any> = [:]
         
         dictionary[Keys.identity.rawValue] = self.identity
         

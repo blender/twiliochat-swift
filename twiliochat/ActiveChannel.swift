@@ -10,7 +10,7 @@ import Foundation
 
 
 
-protocol ActiveChatChannel : ChatChannel {
+protocol ActiveChatChannel: ChatChannel {
     
     var manager: ChannelManager? { get }
     
@@ -50,7 +50,7 @@ typealias ChannelMembershipHandler = (_ creator: StoredMember?, _ others: [Store
 
 
 
-class ActiveChannel : ActiveChatChannel {
+class ActiveChannel: ActiveChatChannel {
     
     private(set) var channel: StoredChannel
     private(set) var messages: [StoredMessage]

@@ -1,5 +1,5 @@
 //
-//  TCHMembers+Storable.swift
+//  TCHMembers+Store.swift
 //  twiliochat
 //
 //  Created by Robert Norris on 15.08.17.

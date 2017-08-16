@@ -8,7 +8,7 @@
 
 
 
-protocol ChannelDelegate {
+protocol ChannelDelegate: class {
     
     func channelManager(_ channelManager: ChannelManager, addedChannel: StoredChannel)
     func channelManager(_ channelManager: ChannelManager, deletedChannel: StoredChannel)
@@ -38,7 +38,7 @@ typealias ActiveChannelHandler = ((ActiveChannel?) -> ())
 
 protocol ChannelManager {
  
-    var delegate: ChannelDelegate? { get set }
+    weak var delegate: ChannelDelegate? { get set }
     
     var channels: [StoredChannel] { get }
     

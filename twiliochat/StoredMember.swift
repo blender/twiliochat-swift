@@ -35,7 +35,7 @@ struct StoredMember: ChatMember {
     
     func toJSON() -> Data {
         
-        var dictionary:Dictionary<String, Any> = [:]
+        var dictionary: Dictionary<String, Any> = [:]
         
         dictionary[Keys.identity.rawValue] = self.identity
         dictionary[Keys.channel.rawValue] = self.channel

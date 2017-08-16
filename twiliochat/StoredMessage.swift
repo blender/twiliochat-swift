@@ -51,7 +51,7 @@ struct StoredMessage: ChatMessage {
     
     func toJSON() -> Data {
         
-        var dictionary:Dictionary<String, Any> = [:]
+        var dictionary: Dictionary<String, Any> = [:]
         
         dictionary[Keys.sid.rawValue] = self.sid
         dictionary[Keys.index.rawValue] = self.index
