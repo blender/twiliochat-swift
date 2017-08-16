@@ -9,6 +9,50 @@
 import Foundation
 
 
+
+protocol ChatChannel {
+    
+    var sid: String { get }
+    var friendlyName: String? { get }
+    var imageUrl: String? { get }
+    var createdBy: String? { get }
+}
+
+
+
+protocol ChatMessage {
+    
+    var sid: String { get }
+    var index: Int { get }
+    var author: String? { get }
+    var body: String? { get }
+    var timestamp: Date { get }
+    var dateUpdated: Date? { get }
+    var lastUpdatedBy: String? { get }
+}
+
+
+
+protocol ChatUser {
+    
+    var identity: String { get }
+    var friendlyName: String? { get }
+    var imageUrl: String? { get }
+}
+
+
+
+protocol ChatMember {
+    
+    var identity: String { get }
+    var lastConsumedMessageIndex: Int? { get }
+}
+
+
+
+
+
+
 typealias ChannelsHandler = (([StoredChannel]) -> ())
 typealias MessagesHandler = ((StoredChannel, [StoredMessage]) -> ())
 typealias UsersHandler = (([StoredUser]) -> ())

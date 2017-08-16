@@ -37,7 +37,7 @@ extension TCHMembers {
             }
             
             group.enter() // .collectMembersFromPaginator
-            self?.collectMembersFromPaginator(paginator!, accumulator: []) { (success, storeableMembers) in
+            self?.collectMembersFromPaginator(paginator!, accumulator: []) { (success, storableMembers) in
                 
                 guard success else {
                     
@@ -47,10 +47,10 @@ extension TCHMembers {
                 }
                 
                 let storedChannel = channel.storable
-                let storedMembers = storeableMembers.map { $0.storable(forChannel: channel) }
+                let storedMembers = storableMembers.map { $0.storable(forChannel: channel) }
                 members?(storedChannel, storedMembers)
                 
-                storeableMembers.forEach { (member) in
+                storableMembers.forEach { (member) in
                     
                     group.enter() // .userDescriptor
                     member.userDescriptor { (result, descriptor) in
@@ -63,9 +63,9 @@ extension TCHMembers {
                             return
                         }
                         
-                        let storeableUser = StoredUser(identity: userDescriptor.identity
+                        let storableUser = StoredUser(identity: userDescriptor.identity
                             , friendlyName: userDescriptor.friendlyName, imageUrl: nil)
-                        storedUsers.append(storeableUser)
+                        storedUsers.append(storableUser)
                         
                         // Nota bene: Robert Norris - version 1.0.7 return 200 but nil when  trying to subscribe 
                         // so the StoredUser is constructed from the TCHUserDescriptor instead.
@@ -76,14 +76,14 @@ extension TCHMembers {
 //                        userDescriptor?.subscribe { (result, user) in
 //                            
 //                            guard result?.isSuccessful() ?? false
-//                                , let storeableUser = user else {
+//                                , let storableUser = user else {
 //                                    
 //                                    completed = false
 //                                    group.leave() // .subscribe
 //                                    return
 //                            }
 //                            
-//                            users.append(storeableUser)
+//                            users.append(storableUser)
 //                            group.leave() // .subscribe
 //                        }
                         

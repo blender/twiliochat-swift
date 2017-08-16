@@ -6,35 +6,6 @@
 //  Copyright © 2017 Twilio. All rights reserved.
 //
 
-import TwilioChatClient
-
-
-
-protocol ChatChannel {
-    
-    var sid: String { get }
-    var friendlyName: String? { get }
-    var imageUrl: String? { get }
-    var createdBy: String? { get }
-}
-
-
-
-extension TCHChannel {
-    
-    var storable: StoredChannel {
-        
-        // TODO: imageURL from attributes
-        
-        return StoredChannel(sid: self.sid, friendlyName: self.friendlyName, imageUrl: nil, createdBy: self.createdBy)
-    }
-    
-    func store(storeMembers members: MembersHandler?, storeUsers users: UsersHandler?, completion: SuccessHandler?) {
-        
-        self.members.store(inChannel: self, storeMembers: members, storeUsers: users, completion: completion)
-    }
-}
-
 
 
 struct StoredChannel: ChatChannel {

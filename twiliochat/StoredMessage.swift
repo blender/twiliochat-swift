@@ -6,34 +6,6 @@
 //  Copyright © 2017 Twilio. All rights reserved.
 //
 
-import TwilioChatClient
-
-
-
-protocol ChatMessage {
-    
-    var sid: String { get }
-    var index: Int { get }
-    var author: String? { get }
-    var body: String? { get }
-    var timestamp: Date { get }
-    var dateUpdated: Date? { get }
-    var lastUpdatedBy: String? { get }
-}
-
-
-
-extension TCHMessage {
-    
-    func storable(forChannel channel: TCHChannel) -> StoredMessage {
-        
-        return StoredMessage(sid: self.sid, index: self.index.intValue
-            , author: self.author, body: self.body, timestamp: self.timestampAsDate
-            , dateUpdated: self.dateUpdatedAsDate
-            , lastUpdatedBy: self.lastUpdatedBy, channel: channel.sid)
-    }
-}
-
 
 
 struct StoredMessage: ChatMessage {

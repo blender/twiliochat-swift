@@ -6,29 +6,6 @@
 //  Copyright © 2017 Twilio. All rights reserved.
 //
 
-import TwilioChatClient
-
-
-
-protocol ChatUser {
-
-    var identity: String { get }
-    var friendlyName: String? { get }
-    var imageUrl: String? { get }
-}
-
-
-
-extension TCHUser {
-    
-    var storable: StoredUser {
-        
-        // TODO: imageURL from attributes
-        
-        return StoredUser(identity: self.identity, friendlyName: self.friendlyName, imageUrl: nil)
-    }
-}
-
 
 
 struct StoredUser: ChatUser {

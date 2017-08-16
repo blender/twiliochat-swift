@@ -9,6 +9,7 @@
 import TwilioChatClient
 
 
+
 typealias TCHChannelsSuccessCompletion = (Bool, [TCHChannel]) -> ()
 typealias TCHMessagesSuccessCompletion = (Bool, [TCHMessage]) -> ()
 
@@ -37,7 +38,7 @@ extension TCHChannels {
             }
             
             group.enter() // .collectChannelsFromPaginator
-            self?.collectChannelsFromPaginator(paginator!, accumulator: []) { (success, storeableChannels) in
+            self?.collectChannelsFromPaginator(paginator!, accumulator: []) { (success, storableChannels) in
 
                 guard success else {
                 
@@ -48,13 +49,13 @@ extension TCHChannels {
                 
                 // TODO: partial results?
                 
-                let storedChannels = storeableChannels.map { $0.storable }
+                let storedChannels = storableChannels.map { $0.storable }
                 channels?(storedChannels)
                 
-                storeableChannels.forEach { (storeableChannel) in
+                storableChannels.forEach { (storableChannel) in
 
                     group.enter() // .collectMessagesFromChannel
-                    self?.collectMessagesFromChannel(storeableChannel) { (sucess, storeableMessages) in
+                    self?.collectMessagesFromChannel(storableChannel) { (sucess, storableMessages) in
 
                         guard success else {
                     
@@ -63,12 +64,12 @@ extension TCHChannels {
                             return
                         }
                         
-                        let storedChannel = storeableChannel.storable
-                        let storedMessages = storeableMessages.map { $0.storable(forChannel: storeableChannel) }
+                        let storedChannel = storableChannel.storable
+                        let storedMessages = storableMessages.map { $0.storable(forChannel: storableChannel) }
                         messages?(storedChannel, storedMessages)
 
                         group.enter() // .members.store
-                        storeableChannel.store(storeMembers: members, storeUsers: users) { (success) in
+                        storableChannel.store(storeMembers: members, storeUsers: users) { (success) in
                          
                             guard success else {
                                 
@@ -135,14 +136,14 @@ extension TCHChannels {
                 userDescriptor?.subscribe { (result, user) in
                     
                     guard result?.isSuccessful() ?? false
-                        , let storeableUser = user else {
+                        , let storableUser = user else {
                 
                         group.leave() // .subscribe
                         completed = false
                         return
                     }
                     
-                    users.append(storeableUser)
+                    users.append(storableUser)
                     group.leave() // .subscribe
                 }
                 
@@ -169,13 +170,13 @@ extension TCHChannels {
             channelDescriptor.channel { result, channel in
                 
                 guard result?.isSuccessful() ?? false
-                    , let storeableChannel = channel else {
+                    , let storableChannel = channel else {
                         
                         group.leave() // .channel
                         return
                 }
                 
-                channels.append(storeableChannel)
+                channels.append(storableChannel)
                 group.leave() // .channel
             }
         }

@@ -6,26 +6,6 @@
 //  Copyright © 2017 Twilio. All rights reserved.
 //
 
-import TwilioChatClient
-
-
-
-protocol ChatMember {
-
-    var identity: String { get }
-    var lastConsumedMessageIndex: Int? { get }
-}
-
-
-
-extension TCHMember {
-    
-    func storable(forChannel channel: TCHChannel) -> StoredMember {
-    
-        return StoredMember(identity: self.identity, lastConsumedMessageIndex: self.lastConsumedMessageIndex?.intValue, channel: channel.sid)
-    }
-}
-
 
 
 struct StoredMember: ChatMember {
