@@ -14,9 +14,14 @@ protocol ActiveChatChannel : ChatChannel {
     
     var manager: ChannelManager? { get }
     
+    var creator: StoredMember? { get }
+    var others: [StoredMember] { get }
+    
     func sendMessage(_: String)
     func removeMessage(atIndex: Int)
     func advanceLastConsumedMessageIndex(_ index: Int)
+    
+    func getUnreadMessageCountForMember(_ member: ChatMember) -> Int
 }
 
 
@@ -52,6 +57,9 @@ class ActiveChannel : ActiveChatChannel {
     private(set) var members: Set<StoredMember> = Set<StoredMember>()
     private(set) var users: Set<StoredUser> = Set<StoredUser>()
     
+    private(set) var creator: StoredMember?
+    private(set) var others: [StoredMember] = []
+    
     var manager: ChannelManager?
     
     init(_ storedChannel: StoredChannel
@@ -63,6 +71,9 @@ class ActiveChannel : ActiveChatChannel {
         self.users = Set(storedUsers)
         self.members = Set(storedMembers)
         self.messages = storedMessages
+        
+        self.creator = self.members.first { $0.identity == self.createdBy }
+        self.others = self.members.filter { $0.identity != self.createdBy }
     }
     
     var sid: String {
@@ -90,11 +101,14 @@ class ActiveChannel : ActiveChatChannel {
         return self.friendlyName ?? self.sid
     }
     
-    func membership(_ membership: ChannelMembershipHandler) {
+    func getUnreadMessageCountForMember(_ member: ChatMember) -> Int {
         
-        let creator = self.members.first { $0.identity == self.createdBy }
-        let others = self.members.filter { $0.identity != self.createdBy }
+        guard let lastMessageIndex = self.messages.last?.index
+            , let lastConsumedMessageIndex = member.lastConsumedMessageIndex else {
+            
+            return -1
+        }
         
-        membership(creator, others)
+        return lastMessageIndex - lastConsumedMessageIndex
     }
 }

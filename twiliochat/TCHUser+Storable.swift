@@ -10,7 +10,7 @@ import TwilioChatClient
 
 
 
-public protocol ChatUser {
+protocol ChatUser {
 
     var identity: String { get }
     var friendlyName: String? { get }

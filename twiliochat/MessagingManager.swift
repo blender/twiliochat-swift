@@ -33,11 +33,11 @@ protocol MessagingManager {
     func startup(completion: StartupHandler?)
     func shutdown()
     
+    func activateChannel(_: ChatChannel, completion: @escaping ActiveChannelHandler)
+    
     func sendMessage(_: String, inChannel: ChatChannel)
     func removeMessage(atIndex: Int, fromChannel: ChatChannel)
     func advanceLastConsumedMessageIndex(_ index: Int, forChannel: ChatChannel)
-    
-    func activateChannel(_: ChatChannel, completion: @escaping ActiveChannelHandler)
 }
 
 

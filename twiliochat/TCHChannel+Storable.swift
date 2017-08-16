@@ -6,11 +6,11 @@
 //  Copyright © 2017 Twilio. All rights reserved.
 //
 
-//import TwiliChatClient
+import TwilioChatClient
 
 
 
-public protocol ChatChannel {
+protocol ChatChannel {
     
     var sid: String { get }
     var friendlyName: String? { get }

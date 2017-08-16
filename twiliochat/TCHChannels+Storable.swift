@@ -6,7 +6,7 @@
 //  Copyright © 2017 Twilio. All rights reserved.
 //
 
-//import TwiliChatClient
+import TwilioChatClient
 
 
 typealias TCHChannelsSuccessCompletion = (Bool, [TCHChannel]) -> ()
