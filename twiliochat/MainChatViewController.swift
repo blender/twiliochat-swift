@@ -10,18 +10,7 @@ class MainChatViewController: SLKTextViewController {
     
     fileprivate var channel:ActiveChannel?
     
-    lazy var messagingManager: MessagingManager = {
-        
-        var manager = AppDelegate.sharedDelegate.messagingManager
-        manager.delegate = self
-        
-        return manager
-    }()
-    
-    var channelManager: ChannelManager {
-        
-        return self.messagingManager.channelManager
-    }
+    var messagingManager: MessagingManager = AppDelegate.sharedDelegate.messagingManager
     
     var messages:Set<StoredMessage> = Set<StoredMessage>()
     var sortedMessages:[StoredMessage]!
@@ -72,7 +61,7 @@ class MainChatViewController: SLKTextViewController {
         
         if self.channel == nil {
 
-            self.chooseChannel(self.channelManager.channels.first)
+            self.messagingManager(self.messagingManager, chooseChannel: self.messagingManager.channels.first)
         }
     }
     
@@ -203,7 +192,7 @@ class MainChatViewController: SLKTextViewController {
         revealViewController().revealToggle(animated: true)
     }
     
-    func chooseChannel(_ channel: StoredChannel?) {
+    func messagingManager(_ manager: MessagingManager, chooseChannel channel: StoredChannel?) {
         
         guard self.channel?.sid != channel?.sid else {
             
@@ -217,65 +206,58 @@ class MainChatViewController: SLKTextViewController {
             return
         }
         
-        self.activateChannel(chosenChannel, inManager: self.channelManager)
+        self.activateChannel(chosenChannel, inManager: manager)
     }
 }
 
 
 
-extension MainChatViewController: MessagingDelegate {
+extension MainChatViewController: ActiveChatChannelDelegate {
     
-    fileprivate func activateChannel(_ channel: StoredChannel, inManager manager: ChannelManager) {
+    fileprivate func activateChannel(_ channel: StoredChannel, inManager manager: MessagingManager) {
     
         manager.activateChannel(channel) { [weak self] activeChannel in
             
+            if let currentChannel = self?.channel {
+                
+                manager.deactivateChannel(currentChannel)
+            }
+            
             self?.channel = activeChannel
             self?.title = self?.channel?.displayName
+            self?.channel?.delegate = self
             self?.loadMessages()
         }
     }
     
-    func messagingManager(_ manager: MessagingManager, addedMessage message: StoredMessage, toChannel channel: StoredChannel) {
+    func activeChatChannel(_ channel: ActiveChatChannel, addedMessage message: ChatMessage) {
      
         guard self.channel?.sid == channel.sid else { return }
 
-        // TODO: this refreshes everything... maybe sync change instead
-        self.activateChannel(channel, inManager: manager.channelManager)
+        self.loadMessages()
     }
     
-    func messagingManager(_ manager: MessagingManager, deletedMessage message: StoredMessage, fromChannel channel: StoredChannel) {
+    func activeChatChannel(_ channel: ActiveChatChannel, deletedMessage message: ChatMessage) {
 
         guard self.channel?.sid == channel.sid else { return }
         
-        // TODO: this refreshes everything... maybe sync change instead
-        self.activateChannel(channel, inManager: manager.channelManager)
+        self.loadMessages()
     }
     
-    func messagingManager(_ manager: MessagingManager, updatedMessage: StoredMessage, inChannel channel: StoredChannel) {
+    func activeChatChannel(_ channel: ActiveChatChannel, updatedMessage: ChatMessage) {
         
         guard self.channel?.sid == channel.sid else { return }
         
-        // TODO: this refreshes everything... maybe sync change instead
-        self.activateChannel(channel, inManager: manager.channelManager)
+        self.loadMessages()
     }
 
-    func messagingManager(_ manager: MessagingManager, updatedChannel channel: StoredChannel) {
-        
-        guard self.channel?.sid == channel.sid else { return }
-        
-        self.activateChannel(channel, inManager: manager.channelManager)
+    func activeChatChannel(_ channel: ActiveChatChannel, memberStartedTyping: ChatMember) {
+    
+        print("\(String(describing: type(of: self))).\(#function)")
     }
     
-    func channelManager(_: ChannelManager, deletedChannel: StoredChannel) {
+    func activeChatChannel(_ channel: ActiveChatChannel, memberStoppedTyping: ChatMember) {
         
-        // TODO: if this is the current channel we must reset
+        print("\(String(describing: type(of: self))).\(#function)")
     }
-    
-    func channelManager(_ manager: ChannelManager, updatedChannel channel: StoredChannel) {
-        
-        guard self.channel?.sid == channel.sid else { return }
-        
-        self.activateChannel(channel, inManager: manager)
-    }
-
 }

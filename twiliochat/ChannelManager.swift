@@ -8,51 +8,47 @@
 
 
 
-protocol ChannelDelegate: class {
-    
-    func channelManager(_ channelManager: ChannelManager, addedChannel: StoredChannel)
-    func channelManager(_ channelManager: ChannelManager, deletedChannel: StoredChannel)
-    func channelManager(_ channelManager: ChannelManager, updatedChannel: StoredChannel)
-    
-    func channelManager(_ channelManager: ChannelManager, memberStartedTyping: StoredMember, inChannel: StoredChannel)
-    func channelManager(_ channelManager: ChannelManager, memberStoppedTyping: StoredMember, inChannel: StoredChannel)
-}
+//protocol ChannelDelegate: class {
+//    
+//    func messagingManager(_ channelManager: ChannelManager, addedMessage: ChatMessage, toChannel: ChatChannel)
+//    func messagingManager(_ channelManager: ChannelManager, deletedMessage: ChatMessage, fromChannel: ChatChannel)
+//    func messagingManager(_ channelManager: ChannelManager, updatedMessage: ChatMessage, inChannel: ChatChannel)
+//    
+//    func channelManager(_ channelManager: ChannelManager, memberStartedTyping: ChatMember, inChannel: ChatChannel)
+//    func channelManager(_ channelManager: ChannelManager, memberStoppedTyping: ChatMember, inChannel: ChatChannel)
+//}
+//
+//
+//
+//extension ChannelDelegate {
+//
+//    func messagingManager(_ channelManager: ChannelManager, addedMessage: ChatMessage, toChannel: ChatChannel) {}
+//    func messagingManager(_ channelManager: ChannelManager, deletedMessage: ChatMessage, fromChannel: ChatChannel) {}
+//    func messagingManager(_ channelManager: ChannelManager, updatedMessage: ChatMessage, inChannel: ChatChannel) {}
+//    
+//    func channelManager(_ channelManager: ChannelManager, memberStartedTyping: ChatMember, inChannel: ChatChannel) {}
+//    func channelManager(_ channelManager: ChannelManager, memberStoppedTyping: ChatMember, inChannel: ChatChannel) {}
+//}
 
 
 
-extension ChannelDelegate {
 
-    func channelManager(_ channelManager: ChannelManager, addedChannel: StoredChannel) { }
-    func channelManager(_ channelManager: ChannelManager, deletedChannel: StoredChannel) { }
-    func channelManager(_ channelManager: ChannelManager, updatedChannel: StoredChannel) { }
-    
-    func channelManager(_ channelManager: ChannelManager, memberStartedTyping: StoredMember, inChannel: StoredChannel) { }
-    func channelManager(_ channelManager: ChannelManager, memberStoppedTyping: StoredMember, inChannel: StoredChannel) { }
-}
-
-
-
-typealias ActiveChannelHandler = ((ActiveChannel?) -> ())
 
 
 
 protocol ChannelManager {
  
     weak var delegate: ChannelDelegate? { get set }
-    
-    var channels: [StoredChannel] { get }
-    
-    func addChannel(_: StoredChannel)
-    func deleteChannel(_: StoredChannel)
-    func updateChannel(_: StoredChannel)
-    
-    func member(_ member: StoredMember, startedTypingInChannel: StoredChannel)
-    func member(_ member: StoredMember, stoppedTypingInChannel: StoredChannel)
-    
+            
     func sendMessage(_: String, inChannel: ChatChannel)
     func removeMessage(atIndex: Int, fromChannel: ChatChannel)
     
-    func activateChannel(_: ChatChannel, completion: @escaping ActiveChannelHandler)
+    func activateChannel(_ channel: ChatChannel, completion: @escaping ActiveChannelHandler)
+    func deactivateChannel(_ channel: ActiveChannel)
     
     func advanceLastConsumedMessageIndex(_ index: Int, forChannel: ChatChannel)
+    
+//    func addChannel(_ channel: ChatChannel)
+//    func deleteChannel(_ channel: ChatChannel)
+//    func updateChannel(_ channel: ChatChannel)
 }

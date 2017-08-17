@@ -352,10 +352,6 @@ extension TwilioOfflineChatClient: TwilioChatClientDelegate {
                 return
             }
             
-            // Nota bene: Robert Norris - the purpose of synchronization is to obtain all channels that the current user
-            // is associated with i.e. they are members of. Rather than extract all members we associate the channels with
-            // the current user directly.
-            
             channelList.store(storeChannels: self.chatStore?.storeChannels
                 , storeMessages: self.chatStore?.storeMessages
                 , storeMembers: self.chatStore?.storeMembers

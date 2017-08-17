@@ -22,7 +22,6 @@
 		59F5EDB01C6E925500CE7D32 /* TokenRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F5EDAF1C6E925500CE7D32 /* TokenRequestHandler.swift */; };
 		59F5EDB31C720E1200CE7D32 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F5EDB21C720E1200CE7D32 /* SessionManager.swift */; };
 		6A4F0364109EA5EC97EE576A /* Pods_twiliochatTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 137EB4CC066B6566E219239B /* Pods_twiliochatTests.framework */; };
-		877109151C10EF4F004C57D3 /* ChannelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 877109141C10EF4F004C57D3 /* ChannelManager.swift */; };
 		877109171C15E55E004C57D3 /* MenuTableCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 877109161C15E55E004C57D3 /* MenuTableCell.swift */; };
 		8771091A1C162FC8004C57D3 /* ChatStatusTableCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 877109181C162FC8004C57D3 /* ChatStatusTableCell.xib */; };
 		8771091B1C162FC8004C57D3 /* ChatTableCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 877109191C162FC8004C57D3 /* ChatTableCell.xib */; };
@@ -45,7 +44,6 @@
 		C8E03D4F1F41EA4F00544EFE /* StoredMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E03D4E1F41EA4F00544EFE /* StoredMember.swift */; };
 		C8E03D511F42EFC100544EFE /* TCHMembers+Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E03D501F42EFC100544EFE /* TCHMembers+Store.swift */; };
 		C8E03D771F44808500544EFE /* TCHMessagingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E03D761F44808500544EFE /* TCHMessagingManager.swift */; };
-		C8E03D791F44830000544EFE /* OfflineChannelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E03D781F44830000544EFE /* OfflineChannelManager.swift */; };
 		C8E03D7B1F4483AA00544EFE /* TCHStorables.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E03D7A1F4483AA00544EFE /* TCHStorables.swift */; };
 /* End PBXBuildFile section */
 
@@ -109,7 +107,7 @@
 		C8E03D4E1F41EA4F00544EFE /* StoredMember.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoredMember.swift; sourceTree = "<group>"; };
 		C8E03D501F42EFC100544EFE /* TCHMembers+Store.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "TCHMembers+Store.swift"; sourceTree = "<group>"; };
 		C8E03D761F44808500544EFE /* TCHMessagingManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TCHMessagingManager.swift; sourceTree = "<group>"; };
-		C8E03D781F44830000544EFE /* OfflineChannelManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OfflineChannelManager.swift; sourceTree = "<group>"; };
+		C8E03D781F44830000544EFE /* TCHChannelManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TCHChannelManager.swift; sourceTree = "<group>"; };
 		C8E03D7A1F4483AA00544EFE /* TCHStorables.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TCHStorables.swift; sourceTree = "<group>"; };
 		DB93390FBA31DBC1606B543F /* Pods-twiliochatUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-twiliochatUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-twiliochatUITests/Pods-twiliochatUITests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -257,7 +255,7 @@
 		877109101C10EEF0004C57D3 /* channels */ = {
 			isa = PBXGroup;
 			children = (
-				C8E03D781F44830000544EFE /* OfflineChannelManager.swift */,
+				C8E03D781F44830000544EFE /* TCHChannelManager.swift */,
 				877109141C10EF4F004C57D3 /* ChannelManager.swift */,
 			);
 			name = channels;
@@ -521,7 +519,6 @@
 			files = (
 				C8B6599E1F3AF5DA00AA0AC0 /* TwilioOfflineChatClient.swift in Sources */,
 				C8E03D4B1F41910C00544EFE /* StoredUser.swift in Sources */,
-				877109151C10EF4F004C57D3 /* ChannelManager.swift in Sources */,
 				87F895F81C0E045F00754007 /* MainChatViewController.swift in Sources */,
 				C8CEF41E1F30C3FB00F59FA6 /* Reachability.swift in Sources */,
 				C8CEF4261F31C02E00F59FA6 /* StoredMessage.swift in Sources */,
@@ -540,7 +537,6 @@
 				C8E03D771F44808500544EFE /* TCHMessagingManager.swift in Sources */,
 				59F208FE1C04C06800CC2392 /* AppDelegate.swift in Sources */,
 				59AE1CD21C0D03820008B10B /* MessagingManager.swift in Sources */,
-				C8E03D791F44830000544EFE /* OfflineChannelManager.swift in Sources */,
 				59F5EDB01C6E925500CE7D32 /* TokenRequestHandler.swift in Sources */,
 				59F5EDB31C720E1200CE7D32 /* SessionManager.swift in Sources */,
 				C8E03D7B1F4483AA00544EFE /* TCHStorables.swift in Sources */,

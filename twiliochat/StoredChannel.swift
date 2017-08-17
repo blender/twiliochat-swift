@@ -23,8 +23,6 @@ struct StoredChannel: ChatChannel {
     var imageUrl: String?
     var createdBy: String?
     
-    var channelManager: ChannelManager?
-    
     init(sid: String, friendlyName: String?, imageUrl: String?, createdBy: String?) {
         
         self.sid = sid

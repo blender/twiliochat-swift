@@ -10,13 +10,6 @@ class MenuViewController: UIViewController {
     var refreshControl: UIRefreshControl!
     
     var messagingManager = AppDelegate.sharedDelegate.messagingManager
-    lazy var channelManager: ChannelManager = {
-       
-        var manager = self.messagingManager.channelManager
-        manager.delegate = self
-        
-        return manager
-    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,7 +39,7 @@ class MenuViewController: UIViewController {
     func channelCellForTableView(tableView: UITableView, atIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let menuCell = tableView.dequeueReusableCell(withIdentifier: "channelCell", for: indexPath as IndexPath) as! MenuTableCell
         
-        let channel = self.channelManager.channels[indexPath.row]
+        let channel = self.messagingManager.channels[indexPath.row]
         
         menuCell.channelName = channel.displayName ?? ""
         
@@ -106,17 +99,16 @@ class MenuViewController: UIViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == MenuViewController.TWCOpenChannelSegue {
-            let indexPath = sender as! NSIndexPath
-            let channel = self.channelManager.channels[indexPath.row]
-            let navigationController = segue.destination as! UINavigationController
-            
-            guard let mainChatViewController = navigationController.visibleViewController as? MainChatViewController else {
+
+            guard let navigationController = segue.destination as? UINavigationController
+                , let mainChatViewController = navigationController.visibleViewController as? MainChatViewController
+                , let indexPath = sender as? NSIndexPath else {
                 
                 return
             }
             
-            self.messagingManager.delegate = nil
-            mainChatViewController.chooseChannel(channel)
+            let channel = self.messagingManager.channels[indexPath.row]
+            mainChatViewController.messagingManager(self.messagingManager, chooseChannel: channel)
         }
     }
     
@@ -131,13 +123,13 @@ class MenuViewController: UIViewController {
 extension MenuViewController : UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return max(self.channelManager.channels.count, 1)
+        return max(self.messagingManager.channels.count, 1)
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell: UITableViewCell
         
-        if self.channelManager.channels.isEmpty {
+        if self.messagingManager.channels.isEmpty {
             cell = loadingCellForTableView(tableView: tableView)
         }
         else {
@@ -156,8 +148,8 @@ extension MenuViewController : UITableViewDataSource {
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle,
                    forRowAt indexPath: IndexPath) {
         
-        let channel = self.channelManager.channels[indexPath.row]
-        self.channelManager.deleteChannel(channel)
+        let channel = self.messagingManager.channels[indexPath.row]
+        self.messagingManager.deleteChannel(channel)
     }
 }
 
@@ -171,19 +163,19 @@ extension MenuViewController : UITableViewDelegate {
 
 
 
-extension MenuViewController: ChannelDelegate {
+extension MenuViewController: MessagingDelegate {
     
-    func channelManager(_ manager: ChannelManager, addedChannel: ChatChannel) {
+    func messagingManager(_ manager: MessagingManager, addedChannel: ChatChannel) {
         
         tableView.reloadData()
     }
 
-    func channelManager(_ manager: ChannelManager, deletedChannel: ChatChannel) {
+    func messagingManager(_ manager: MessagingManager, deletedChannel: ChatChannel) {
         
         tableView.reloadData()
     }
 
-    func channelManager(_ manager: ChannelManager, updatedChannel: ChatChannel) {
+    func messagingManager(_ manager: MessagingManager, updatedChannel: ChatChannel) {
         
         tableView.reloadData()
     }
