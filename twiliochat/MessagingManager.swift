@@ -17,7 +17,7 @@ protocol MessagingDelegate: class {
     func messagingManager(_ messagingManager: MessagingManager, addedMessage: ChatMessage, toChannel: ChatChannel)
     func messagingManager(_ messagingManager: MessagingManager, deletedMessage: ChatMessage, fromChannel: ChatChannel)
     func messagingManager(_ messagingManager: MessagingManager, updatedMessage: ChatMessage, inChannel: ChatChannel)
-
+    
     func messagingManager(_ messagingManager: MessagingManager, memberStartedTyping: ChatMember, inChannel: ChatChannel)
     func messagingManager(_ messagingManager: MessagingManager, memberStoppedTyping: ChatMember, inChannel: ChatChannel)
 }
@@ -25,7 +25,7 @@ protocol MessagingDelegate: class {
 
 
 extension MessagingDelegate {
-        
+    
     func messagingManager(_ messagingManager: MessagingManager, addedChannel: ChatChannel) {}
     func messagingManager(_ messagingManager: MessagingManager, deletedChannel: ChatChannel) {}
     func messagingManager(_ messagingManager: MessagingManager, updatedChannel: ChatChannel) {}
@@ -48,7 +48,6 @@ protocol MessagingManager {
     
     static func sharedManager() -> MessagingManager
     
-    //var channelManager: ChannelManager { get }
     weak var delegate: MessagingDelegate? { get set }
     
     var user: StoredUser? { get }
@@ -67,6 +66,8 @@ protocol MessagingManager {
     func sendMessage(_: String, inChannel: ChatChannel)
     func removeMessage(atIndex: Int, fromChannel: ChatChannel)
     func advanceLastConsumedMessageIndex(_ index: Int, forChannel: ChatChannel)
+    
+    func typingInChannel(_ channel: ChatChannel)
     
     func addChannel(_ channel: ChatChannel)
     func deleteChannel(_ channel: ChatChannel)

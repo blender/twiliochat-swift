@@ -27,16 +27,6 @@ class TCHMessagingManager: NSObject {
     fileprivate(set) var channels: [StoredChannel] = []
     fileprivate(set) var activeChannels: Set<ActiveChannel> = Set()
     
-    // has a set of ChannelManager... one for each ActiveChannel
-    // then an ActiveChannel responds to changes in the ChannelManager as a ChannelDelegate
-    // a ChannelManager is
-    // if there is 1:1 between ActiveChannel and ChannelManager then what is it there for?
-    // the delegate of the ChannelManager will get all calls
-    // the delegete of the ActiveChannel will get only those calls it needs
-    // then the activeChannels collection can be in the ChannelManager
-    // if the ChannelManager also knows about the client then it can react directly rather than second hand
-    
-    
     var connected = false
     
     var rootViewControllerName: String?
@@ -249,6 +239,11 @@ extension TCHMessagingManager: MessagingManager {
         self.client.advanceLastConsumedMessageIndex(index, forChannel: channel)
     }
     
+    func typingInChannel(_ channel: ChatChannel) {
+        
+        self.client.typingInChannel(channel)
+    }
+    
     func activateChannel(_ channel: ChatChannel, completion: @escaping ActiveChannelHandler) {
         
         guard let chatStore = self.client.chatStore else {
@@ -314,7 +309,7 @@ extension TCHMessagingManager: MessagingManager {
     }
     
     func addChannel(_ channel: ChatChannel) {
-     
+        
         // TODO add to twilioclient
     }
     
@@ -329,25 +324,13 @@ extension TCHMessagingManager: MessagingManager {
     }
 }
 
-// MessagingDelegate knows about channels being added and deleted so is the governing instance
-//
+
 
 extension TCHMessagingManager: ChatClientDelegate {
     
     func chatClient(_ client: TwilioOfflineChatClient, channelAdded channel: TCHChannel) {
         
         let storableChannel = channel.storable
-        
-        // if we set the delegate of the channel, communications goes that way as well
-        // it the
-        
-        // the channel is included i.e. the ChannelManager is the delegate
-        // and can split off to all ActiveChannel
-        // we only need this for messages and for member typing...
-        // thus the ChannelManager or OfflineChannelManager is a TCHChannelDelegate
-        
-        // TCHChannelManager has delegate of type ChannelDelegate
-        //
         
         self.delegate?.messagingManager(self, addedChannel: storableChannel)
     }
@@ -388,7 +371,7 @@ extension TCHMessagingManager: ChatClientDelegate {
             }
             
             group.notify(queue: DispatchQueue.main) {
-
+                
                 self.startup?(true, nil)
                 self.startup = nil
             }
@@ -396,17 +379,17 @@ extension TCHMessagingManager: ChatClientDelegate {
     }
     
     func chatClient(_ client: TwilioOfflineChatClient, channel: TCHChannel, messageAdded message: TCHMessage) {
-
+        
         let storableMessage = message.storable(forChannel: channel)
         let storableChannel = channel.storable
-
+        
         self.delegate?.messagingManager(self, addedMessage: storableMessage, toChannel: storableChannel)
         
         guard let activeChannel = (self.activeChannels.first { $0.sid == channel.sid }) else {
             
             return
         }
-
+        
         activeChannel.messagingManager(self, addedMessage: storableMessage, toChannel: storableChannel)
     }
     
@@ -414,7 +397,7 @@ extension TCHMessagingManager: ChatClientDelegate {
         
         let storableMessage = message.storable(forChannel: channel)
         let storableChannel = channel.storable
-
+        
         self.delegate?.messagingManager(self, updatedMessage: storableMessage, inChannel: storableChannel)
         
         guard let activeChannel = (self.activeChannels.first { $0.sid == channel.sid }) else {
@@ -429,7 +412,7 @@ extension TCHMessagingManager: ChatClientDelegate {
         
         let storableMessage = message.storable(forChannel: channel)
         let storableChannel = channel.storable
-
+        
         self.delegate?.messagingManager(self, deletedMessage: storableMessage, fromChannel: storableChannel)
         
         guard let activeChannel = (self.activeChannels.first { $0.sid == channel.sid }) else {

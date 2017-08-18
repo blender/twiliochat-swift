@@ -38,16 +38,23 @@ protocol ActiveChatChannel: ChatChannel {
     
     var creator: StoredMember? { get }
     var others: [StoredMember] { get }
-
+    
     var messagingManager: MessagingManager { get }
     
     weak var delegate: ActiveChatChannelDelegate? { get set }
     
-    func sendMessage(_: String)
+    func sendMessage(_ message: String)
     func removeMessage(atIndex: Int)
     func advanceLastConsumedMessageIndex(_ index: Int)
     
+    func typing()
+    
     func getUnreadMessageCountForMember(_ member: ChatMember) -> Int
+    func getMembersWithConsumptionHorizonBeyondMessageIndex(_ index: Int) -> [ChatMember]
+    
+    func getMemberCountWithConsumptionHorizonBeyondMessageIndex(_ index: Int) -> Int
+    func didAnyMemberConsumeMessageWithIndex(_ index: Int) -> Bool
+    func didAllMembersConsumeMessageWithIndex(_ index: Int) -> Bool
 }
 
 
@@ -67,6 +74,11 @@ extension ActiveChatChannel {
     func advanceLastConsumedMessageIndex(_ index: Int) {
         
         self.messagingManager.advanceLastConsumedMessageIndex(index, forChannel: self)
+    }
+    
+    func typing() {
+        
+        self.messagingManager.typingInChannel(self)
     }
 }
 
@@ -97,12 +109,12 @@ class ActiveChannel: ActiveChatChannel {
         , storedMessages: [StoredMessage] = []) {
         
         self.messagingManager = messagingManager
-
+        
         self.channel = storedChannel
         self.users = Set(storedUsers)
         self.members = Set(storedMembers)
         self.messages = storedMessages.sorted { $0.index < $1.index }
-
+        
         self.creator = self.members.first { $0.identity == self.createdBy }
         self.others = self.members.filter { $0.identity != self.createdBy }
     }
@@ -111,7 +123,7 @@ class ActiveChannel: ActiveChatChannel {
         
         return self.channel.sid
     }
-
+    
     var friendlyName: String? {
         
         return self.channel.friendlyName
@@ -127,7 +139,7 @@ class ActiveChannel: ActiveChatChannel {
         return self.channel.createdBy
     }
     
-    var displayName: String? {
+    var displayName: String {
         
         return self.friendlyName ?? self.sid
     }
@@ -146,6 +158,26 @@ class ActiveChannel: ActiveChatChannel {
         
         return lastMessageIndex - lastConsumedMessageIndex
     }
+    
+    func getMembersWithConsumptionHorizonBeyondMessageIndex(_ index: Int) -> [ChatMember] {
+        
+        return self.members.filter { $0.lastConsumedMessageIndex.flatMap { $0 > index } ?? false }
+    }
+    
+    func getMemberCountWithConsumptionHorizonBeyondMessageIndex(_ index: Int) -> Int {
+        
+        return self.getMembersWithConsumptionHorizonBeyondMessageIndex(index).count
+    }
+    
+    func didAnyMemberConsumeMessageWithIndex(_ index: Int) -> Bool {
+        
+        return self.getMemberCountWithConsumptionHorizonBeyondMessageIndex(index) > 0
+    }
+    
+    func didAllMembersConsumeMessageWithIndex(_ index: Int) -> Bool {
+        
+        return self.getMemberCountWithConsumptionHorizonBeyondMessageIndex(index) == self.members.count
+    }
 }
 
 
@@ -153,12 +185,12 @@ class ActiveChannel: ActiveChatChannel {
 extension ActiveChannel: MessagingDelegate {
     
     func messagingManager(_ messagingManager: MessagingManager, deletedChannel channel: ChatChannel) {
-    
+        
         // TODO: if this channel then bail!
     }
     
     func messagingManager(_ messagingManager: MessagingManager, updatedChannel channel: ChatChannel) {
-    
+        
         guard channel.sid == self.channel.sid else {
             
             return
@@ -169,9 +201,9 @@ extension ActiveChannel: MessagingDelegate {
     }
     
     func messagingManager(_ messagingManager: MessagingManager, addedMessage message: ChatMessage, toChannel channel: ChatChannel) {
-
-        guard channel.sid == self.channel.sid else {
         
+        guard channel.sid == self.channel.sid else {
+            
             self.delegate?.activeChatChannel(self, addedMessage: message)
             return
         }
@@ -185,7 +217,7 @@ extension ActiveChannel: MessagingDelegate {
     }
     
     func messagingManager(_ messagingManager: MessagingManager, deletedMessage message: ChatMessage, fromChannel channel: ChatChannel) {
-
+        
         guard channel.sid == self.channel.sid else {
             
             self.delegate?.activeChatChannel(self, deletedMessage: message)
@@ -202,7 +234,7 @@ extension ActiveChannel: MessagingDelegate {
     }
     
     func messagingManager(_ messagingManager: MessagingManager, updatedMessage message: ChatMessage, inChannel channel: ChatChannel) {
-
+        
         guard channel.sid == self.channel.sid else {
             
             self.delegate?.activeChatChannel(self, updatedMessage: message)
@@ -219,12 +251,12 @@ extension ActiveChannel: MessagingDelegate {
     }
     
     func messagingManager(_ messagingManager: MessagingManager, memberStartedTyping member: ChatMember, inChannel channel: ChatChannel) {
-    
+        
         self.delegate?.activeChatChannel(self, memberStartedTyping: member)
     }
     
     func messagingManager(_ messagingManager: MessagingManager, memberStoppedTyping member: ChatMember, inChannel channel: ChatChannel) {
-    
+        
         self.delegate?.activeChatChannel(self, memberStoppedTyping: member)
     }
 }

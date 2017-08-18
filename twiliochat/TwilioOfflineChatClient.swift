@@ -288,7 +288,7 @@ public class TwilioOfflineChatClient: NSObject {
             
             let message = channel?.messages.createMessage(withBody: body)
             channel?.messages.send(message) { (result) in
-            
+                
                 guard result?.isSuccessful() ?? false else { return }
             }
         }
@@ -297,9 +297,9 @@ public class TwilioOfflineChatClient: NSObject {
     func removeMessage(atIndex index: Int, fromChannel chatChannel: ChatChannel) {
         
         self.twilioChatClient?.channelsList().channel(withSidOrUniqueName: chatChannel.sid) { (result, channel) in
-
-            channel?.messages.message(withIndex: NSNumber.init(value: index)) { (result, message) in
             
+            channel?.messages.message(withIndex: NSNumber.init(value: index)) { (result, message) in
+                
                 guard result?.isSuccessful() ?? false
                     , let removeableMessage = message else { return }
                 
@@ -318,6 +318,14 @@ public class TwilioOfflineChatClient: NSObject {
         self.twilioChatClient?.channelsList().channel(withSidOrUniqueName: chatChannel.sid) { (result, channel) in
             
             channel?.messages.advanceLastConsumedMessageIndex(NSNumber(value: index))
+        }
+    }
+    
+    func typingInChannel(_ chatChannel: ChatChannel) {
+        
+        self.twilioChatClient?.channelsList().channel(withSidOrUniqueName: chatChannel.sid) { (result, channel) in
+            
+            channel?.typing()
         }
     }
 }
@@ -355,15 +363,15 @@ extension TwilioOfflineChatClient: TwilioChatClientDelegate {
             channelList.store(storeChannels: self.chatStore?.storeChannels
                 , storeMessages: self.chatStore?.storeMessages
                 , storeMembers: self.chatStore?.storeMembers
-                , storeUsers: self.chatStore?.storeUsers) { success in
+            , storeUsers: self.chatStore?.storeUsers) { success in
                 
-                    guard success else {
-            
-                        self.delegate?.chatClient(self, synchronizationStatusUpdated: .failed)
-                        return
-                    }
+                guard success else {
                     
-                    self.delegate?.chatClient(self, synchronizationStatusUpdated: .completed)
+                    self.delegate?.chatClient(self, synchronizationStatusUpdated: .failed)
+                    return
+                }
+                
+                self.delegate?.chatClient(self, synchronizationStatusUpdated: .completed)
             }
         }
     }
@@ -403,7 +411,7 @@ extension TwilioOfflineChatClient: TwilioChatClientDelegate {
     public func chatClient(_ client: TwilioChatClient!, channel: TCHChannel!, synchronizationStatusUpdated status: TCHChannelSynchronizationStatus) {
         
         if status == .all {
-        
+            
             self.chatStore?.updateChannel(channel.storable)
         }
         
