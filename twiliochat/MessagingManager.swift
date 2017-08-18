@@ -18,6 +18,10 @@ protocol MessagingDelegate: class {
     func messagingManager(_ messagingManager: MessagingManager, deletedMessage: ChatMessage, fromChannel: ChatChannel)
     func messagingManager(_ messagingManager: MessagingManager, updatedMessage: ChatMessage, inChannel: ChatChannel)
     
+    func messagingManager(_ messagingManager: MessagingManager, addedMember: ChatMember, toChannel: ChatChannel)
+    func messagingManager(_ messagingManager: MessagingManager, deletedMember: ChatMember, fromChannel: ChatChannel)
+    func messagingManager(_ messagingManager: MessagingManager, updatedMember: ChatMember, inChannel: ChatChannel)
+    
     func messagingManager(_ messagingManager: MessagingManager, memberStartedTyping: ChatMember, inChannel: ChatChannel)
     func messagingManager(_ messagingManager: MessagingManager, memberStoppedTyping: ChatMember, inChannel: ChatChannel)
 }
@@ -33,6 +37,10 @@ extension MessagingDelegate {
     func messagingManager(_ messagingManager: MessagingManager, addedMessage: ChatMessage, toChannel: ChatChannel) {}
     func messagingManager(_ messagingManager: MessagingManager, deletedMessage: ChatMessage, fromChannel: ChatChannel) {}
     func messagingManager(_ messagingManager: MessagingManager, updatedMessage: ChatMessage, inChannel: ChatChannel) {}
+    
+    func messagingManager(_ messagingManager: MessagingManager, addedMember: ChatMember, toChannel: ChatChannel) {}
+    func messagingManager(_ messagingManager: MessagingManager, deletedMember: ChatMember, fromChannel: ChatChannel) {}
+    func messagingManager(_ messagingManager: MessagingManager, updatedMember: ChatMember, inChannel: ChatChannel) {}
     
     func messagingManager(_ messagingManager: MessagingManager, memberStartedTyping: ChatMember, inChannel: ChatChannel) {}
     func messagingManager(_ messagingManager: MessagingManager, memberStoppedTyping: ChatMember, inChannel: ChatChannel) {}

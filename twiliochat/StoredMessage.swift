@@ -79,7 +79,7 @@ struct StoredMessage: ChatMessage {
             , let channel = d?[Keys.channel.rawValue] as? String
             , let timestamp = _timestamp else {
                 
-            return nil
+                return nil
         }
         
         let author = d?[Keys.author.rawValue] as? String
@@ -111,5 +111,30 @@ extension StoredMessage: Hashable {
     public var hashValue: Int {
         
         return [self.sid, self.channel].joined(separator: ".").hash
+    }
+}
+
+
+
+extension Sequence where Iterator.Element == StoredMessage {
+    
+    var sortedInAscendingOrderOfIndex: [StoredMessage] {
+        
+        return self.sorted { $0.index < $1.index }
+    }
+    
+    var sortedInDescendingOrderOfIndex: [StoredMessage] {
+        
+        return self.sorted { $0.index > $1.index }
+    }
+    
+    var sortedInAscendingOrderOfTimestamp: [StoredMessage] {
+        
+        return self.sorted { $0.timestamp < $1.timestamp }
+    }
+    
+    var sortedInDescendingOrderOfTimestamp: [StoredMessage] {
+        
+        return self.sorted { $0.timestamp > $1.timestamp }
     }
 }

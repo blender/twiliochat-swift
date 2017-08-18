@@ -32,7 +32,7 @@ struct StoredChannel: ChatChannel {
     }
     
     init(channel: ChatChannel) {
-    
+        
         self.init(sid: channel.sid, friendlyName: channel.friendlyName, imageUrl: channel.imageUrl, createdBy: channel.createdBy)
     }
     
@@ -70,7 +70,7 @@ struct StoredChannel: ChatChannel {
             , createdBy: createdBy)
     }
     
-    var displayName: String? {
+    var displayName: String {
         
         return self.friendlyName ?? self.sid
     }
@@ -91,3 +91,18 @@ extension StoredChannel: Hashable {
         return self.sid.hash
     }
 }
+
+
+extension Sequence where Iterator.Element == StoredChannel {
+    
+    var sortedInAscendingOrderOfDisplayName: [StoredChannel] {
+        
+        return self.sorted { $0.displayName < $1.displayName }
+    }
+    
+    var sortedInDescendingOrderOfDisplayName: [StoredChannel] {
+        
+        return self.sorted { $0.displayName > $1.displayName }
+    }
+}
+

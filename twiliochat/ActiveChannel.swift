@@ -16,6 +16,10 @@ protocol ActiveChatChannelDelegate: class {
     func activeChatChannel(_ channel: ActiveChatChannel, deletedMessage: ChatMessage)
     func activeChatChannel(_ channel: ActiveChatChannel, updatedMessage: ChatMessage)
     
+    func activeChatChannel(_ channel: ActiveChatChannel, addedMember: ChatMember)
+    func activeChatChannel(_ channel: ActiveChatChannel, deletedMember: ChatMember)
+    func activeChatChannel(_ channel: ActiveChatChannel, updatedMember: ChatMember)
+    
     func activeChatChannel(_ channel: ActiveChatChannel, memberStartedTyping: ChatMember)
     func activeChatChannel(_ channel: ActiveChatChannel, memberStoppedTyping: ChatMember)
 }
@@ -27,6 +31,10 @@ extension ActiveChatChannelDelegate {
     func activeChatChannel(_ channel: ActiveChatChannel, addedMessage: ChatMessage) {}
     func activeChatChannel(_ channel: ActiveChatChannel, deletedMessage: ChatMessage) {}
     func activeChatChannel(_ channel: ActiveChatChannel, updatedMessage: ChatMessage) {}
+    
+    func activeChatChannel(_ channel: ActiveChatChannel, addedMember: ChatMember) {}
+    func activeChatChannel(_ channel: ActiveChatChannel, deletedMember: ChatMember) {}
+    func activeChatChannel(_ channel: ActiveChatChannel, updatedMember: ChatMember) {}
     
     func activeChatChannel(_ channel: ActiveChatChannel, memberStartedTyping: ChatMember) {}
     func activeChatChannel(_ channel: ActiveChatChannel, memberStoppedTyping: ChatMember) {}
@@ -49,7 +57,7 @@ protocol ActiveChatChannel: ChatChannel {
     
     func typing()
     
-    func getUnreadMessageCountForMember(_ member: ChatMember) -> Int
+    func getUnreadMessageCountForMember(_ member: ChatMember) -> Int?
     func getMembersWithConsumptionHorizonBeyondMessageIndex(_ index: Int) -> [ChatMember]
     
     func getMemberCountWithConsumptionHorizonBeyondMessageIndex(_ index: Int) -> Int
@@ -88,9 +96,21 @@ typealias ChannelMembershipHandler = (_ creator: StoredMember?, _ others: [Store
 
 
 
+enum MessageOrder {
+    
+    case ascendingOrderOfIndex
+    case descendingOrderOfIndex
+    case ascendingOrderOfTimestamp
+    case descendingOrderOfTimestamp
+}
+
+
+
 class ActiveChannel: ActiveChatChannel {
     
     weak var delegate: ActiveChatChannelDelegate?
+    
+    let messageOrder: MessageOrder = .descendingOrderOfTimestamp // TODO: allow this to be changed
     
     fileprivate(set) var channel: StoredChannel
     fileprivate(set) var messages: [StoredMessage]
@@ -113,7 +133,7 @@ class ActiveChannel: ActiveChatChannel {
         self.channel = storedChannel
         self.users = Set(storedUsers)
         self.members = Set(storedMembers)
-        self.messages = storedMessages.sorted { $0.index < $1.index }
+        self.messages = storedMessages.sortedInDescendingOrderOfTimestamp
         
         self.creator = self.members.first { $0.identity == self.createdBy }
         self.others = self.members.filter { $0.identity != self.createdBy }
@@ -144,19 +164,33 @@ class ActiveChannel: ActiveChatChannel {
         return self.friendlyName ?? self.sid
     }
     
-    func getUnreadMessageCountForMember(_ member: ChatMember) -> Int {
+    var latestMessage: StoredMessage? {
         
-        guard let lastMessageIndex = self.messages.last?.index else {
+        switch self.messageOrder {
+        case .ascendingOrderOfIndex
+        , .ascendingOrderOfTimestamp:
             
-            return 0
+            return self.messages.last
+            
+        default:
+            
+            return self.messages.first
+        }
+    }
+    
+    func getUnreadMessageCountForMember(_ member: ChatMember) -> Int? {
+        
+        guard let latestMessageIndex = self.latestMessage?.index else {
+            
+            return nil
         }
         
         guard let lastConsumedMessageIndex = member.lastConsumedMessageIndex else {
             
-            return lastMessageIndex
+            return latestMessageIndex
         }
         
-        return lastMessageIndex - lastConsumedMessageIndex
+        return latestMessageIndex - lastConsumedMessageIndex
     }
     
     func getMembersWithConsumptionHorizonBeyondMessageIndex(_ index: Int) -> [ChatMember] {
@@ -204,14 +238,13 @@ extension ActiveChannel: MessagingDelegate {
         
         guard channel.sid == self.channel.sid else {
             
-            self.delegate?.activeChatChannel(self, addedMessage: message)
             return
         }
         
         let storableMessage = StoredMessage(message: message, inChannel: channel)
         
         let storableMessages = Set([storableMessage] + self.messages)
-        self.messages = storableMessages.sorted { $0.index < $1.index }
+        self.messages = storableMessages.sortedInDescendingOrderOfTimestamp
         
         self.delegate?.activeChatChannel(self, addedMessage: message)
     }
@@ -220,7 +253,6 @@ extension ActiveChannel: MessagingDelegate {
         
         guard channel.sid == self.channel.sid else {
             
-            self.delegate?.activeChatChannel(self, deletedMessage: message)
             return
         }
         
@@ -228,7 +260,7 @@ extension ActiveChannel: MessagingDelegate {
         
         var storableMessages = Set(self.messages)
         storableMessages.remove(storableMessage)
-        self.messages = storableMessages.sorted { $0.index < $1.index }
+        self.messages = storableMessages.sortedInDescendingOrderOfTimestamp
         
         self.delegate?.activeChatChannel(self, deletedMessage: message)
     }
@@ -237,7 +269,6 @@ extension ActiveChannel: MessagingDelegate {
         
         guard channel.sid == self.channel.sid else {
             
-            self.delegate?.activeChatChannel(self, updatedMessage: message)
             return
         }
         
@@ -245,9 +276,56 @@ extension ActiveChannel: MessagingDelegate {
         
         var storableMessages = Set(self.messages)
         storableMessages.update(with: storableMessage)
-        self.messages = storableMessages.sorted { $0.index < $1.index }
+        self.messages = storableMessages.sortedInDescendingOrderOfTimestamp
         
         self.delegate?.activeChatChannel(self, updatedMessage: message)
+    }
+    
+    func messagingManager(_ messagingManager: MessagingManager, addedMember member: ChatMember, toChannel channel: ChatChannel) {
+        
+        guard channel.sid == self.channel.sid else {
+            
+            return
+        }
+        
+        let storableMember = StoredMember(member: member, inChannel: channel)
+        
+        let storableMembers = Set([storableMember] + self.members)
+        self.members = storableMembers
+        
+        self.delegate?.activeChatChannel(self, addedMember: member)
+    }
+    
+    func messagingManager(_ messagingManager: MessagingManager, deletedMember member: ChatMember, fromChannel channel: ChatChannel) {
+        
+        guard channel.sid == self.channel.sid else {
+            
+            return
+        }
+        
+        let storableMember = StoredMember(member: member, inChannel: channel)
+        
+        var storableMembers = Set(self.members)
+        storableMembers.remove(storableMember)
+        self.members = storableMembers
+        
+        self.delegate?.activeChatChannel(self, deletedMember: member)
+    }
+    
+    func messagingManager(_ messagingManager: MessagingManager, updatedMember member: ChatMember, inChannel channel: ChatChannel) {
+        
+        guard channel.sid == self.channel.sid else {
+            
+            return
+        }
+        
+        let storableMember = StoredMember(member: member, inChannel: channel)
+        
+        var storableMembers = Set(self.members)
+        storableMembers.update(with: storableMember)
+        self.members = storableMembers
+        
+        self.delegate?.activeChatChannel(self, updatedMember: member)
     }
     
     func messagingManager(_ messagingManager: MessagingManager, memberStartedTyping member: ChatMember, inChannel channel: ChatChannel) {
